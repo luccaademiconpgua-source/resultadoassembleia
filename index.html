@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Painel Assembleia — Ademicon</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --verde: #1B4332;
+    --verde-mid: #2D6A4F;
+    --verde-light: #D8F3DC;
+    --verde-border: #B7E4C7;
+    --laranja: #E76F1C;
+    --laranja-light: #FEF0E6;
+    --cinza-bg: #F4F6F4;
+    --cinza-card: #FFFFFF;
+    --cinza-borda: #DDE5DD;
+    --texto: #1A1A1A;
+    --texto-sec: #5C6B5C;
+    --fonte: 'Segoe UI', system-ui, sans-serif;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--fonte); background: var(--cinza-bg); color: var(--texto); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--verde);
+    color: #fff;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 36px; height: 36px; background: var(--laranja); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
+  .logo-text { font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+  .logo-sub { font-size: 11px; color: #A8C4B0; margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .assembleia-badge { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #C8E6CC; }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; border-bottom: 2px solid var(--cinza-borda); padding-bottom: 0; }
+  .tab-btn {
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--texto-sec);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    transition: color .15s;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .tab-btn .count { background: var(--cinza-borda); color: var(--texto-sec); font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+  .tab-btn.active { color: var(--verde); border-bottom-color: var(--verde); }
+  .tab-btn.active .count { background: var(--verde-light); color: var(--verde); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; align-items: center; }
+  .toolbar input[type="text"] {
+    flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--cinza-borda);
+    border-radius: var(--radius-sm); font-size: 13px; background: #fff; color: var(--texto);
+    outline: none; transition: border-color .15s;
+  }
+  .toolbar input[type="text"]:focus { border-color: var(--verde-mid); }
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid transparent; transition: all .15s; }
+  .btn-primary { background: var(--verde); color: #fff; border-color: var(--verde); }
+  .btn-primary:hover { background: var(--verde-mid); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-outline { background: #fff; color: var(--verde); border-color: var(--cinza-borda); }
+  .btn-outline:hover { border-color: var(--verde-mid); }
+  .btn-whatsapp { background: #25D366; color: #fff; border-color: #25D366; display: flex; align-items: center; gap: 6px; }
+  .btn-whatsapp:hover { background: #1EBE59; }
+  .btn-sm { padding: 6px 13px; font-size: 12px; }
+
+  /* VIEW TOGGLE */
+  .view-toggle { display: flex; background: var(--cinza-bg); border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); padding: 2px; gap: 2px; }
+  .view-toggle-btn { padding: 7px 14px; font-size: 12px; font-weight: 500; border: none; background: transparent; color: var(--texto-sec); cursor: pointer; border-radius: 4px; transition: all .15s; white-space: nowrap; }
+  .view-toggle-btn.active { background: #fff; color: var(--verde); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* MULTI-COTA (cliente unificado) */
+  .cota-linha { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--cinza-bg); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; }
+  .cota-linha .cota-grupo { font-weight: 600; color: var(--verde); min-width: 95px; }
+  .cota-linha .cota-num { color: var(--texto-sec); }
+  .cota-status-ok { color: #1B4332; font-weight: 600; font-size: 12px; }
+  .cota-status-pendente { color: var(--texto-sec); font-size: 12px; }
+  .multi-cota-tag { background: var(--laranja-light); color: #B85000; font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 600; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: #fff; border: 1px solid var(--cinza-borda); border-radius: var(--radius); padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--texto-sec); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .stat-value { font-size: 26px; font-weight: 600; color: var(--verde); }
+  .stat-sub { font-size: 11px; color: var(--texto-sec); margin-top: 2px; }
+
+  /* ASSEMBLEIA EDITOR */
+  .assembleia-box {
+    background: #fff; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius);
+    margin-bottom: 1.5rem; overflow: hidden;
+  }
+  .assembleia-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; cursor: pointer; background: var(--verde-light);
+    border-bottom: 1px solid var(--verde-border);
+  }
+  .assembleia-header h3 { font-size: 14px; font-weight: 600; color: var(--verde); }
+  .assembleia-body { padding: 18px; display: none; }
+  .assembleia-body.open { display: block; }
+
+  /* UPLOAD PDF */
+  .upload-box {
+    border: 2px dashed var(--verde-border); border-radius: var(--radius);
+    padding: 22px; text-align: center; background: #FAFCFA; margin-bottom: 16px;
+    transition: border-color .15s, background .15s; cursor: pointer; position: relative;
+  }
+  .upload-box:hover, .upload-box.dragover { border-color: var(--verde-mid); background: var(--verde-light); }
+  .upload-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-title { font-size: 13px; font-weight: 600; color: var(--verde); margin-bottom: 3px; }
+  .upload-sub { font-size: 12px; color: var(--texto-sec); }
+  .upload-status { font-size: 13px; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 14px; display: none; }
+  .upload-status.show { display: block; }
+  .upload-status.loading { background: #FEF9C3; color: #713F12; }
+  .upload-status.success { background: var(--verde-light); color: var(--verde); }
+  .upload-status.error { background: #FEE2E2; color: #991B1B; }
+  .upload-meta { font-size: 12px; color: var(--texto-sec); margin-top: 4px; }
+
+  .divider-or { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: var(--texto-sec); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .divider-or::before, .divider-or::after { content:''; flex:1; height:1px; background: var(--cinza-borda); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: end; }
+  .field-row label { font-size: 12px; color: var(--texto-sec); display: block; margin-bottom: 4px; }
+  .field-row input { width: 100%; padding: 8px 10px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; }
+  .field-row input:focus { outline: none; border-color: var(--verde-mid); }
+  .assembleia-list { margin-top: 12px; max-height: 320px; overflow-y: auto; }
+  .assembleia-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--cinza-bg); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 13px; }
+  .assembleia-item .grp { font-weight: 600; min-width: 70px; color: var(--verde); }
+  .assembleia-item .contemp { color: var(--texto-sec); flex: 1; }
+  .assembleia-item .cotas-tag { font-size: 11px; background: #fff; border: 1px solid var(--cinza-borda); color: var(--texto-sec); padding: 2px 8px; border-radius: 9px; }
+  .assembleia-item button { background: none; border: none; cursor: pointer; color: #C0392B; font-size: 16px; padding: 0 4px; }
+  .data-assembleia { font-size: 13px; color: var(--texto-sec); margin-bottom: 12px; }
+  .data-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .data-row input[type="date"] { padding: 8px 10px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; }
+  .hint { font-size: 12px; color: var(--texto-sec); background: var(--cinza-bg); border-radius: var(--radius-sm); padding: 8px 12px; margin-top: 10px; }
+
+  /* CLIENT CARDS */
+  .client-grid { display: flex; flex-direction: column; gap: 10px; }
+  .client-card { background: #fff; border: 1px solid var(--cinza-borda); border-radius: var(--radius); overflow: hidden; }
+  .client-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; }
+  .client-header:hover { background: #FAFCFA; }
+  .client-left { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+  .client-name { font-size: 14px; font-weight: 600; }
+  .client-sub { font-size: 12px; color: var(--texto-sec); margin-top: 2px; }
+  .client-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 500; }
+  .badge-grupo { background: var(--verde-light); color: var(--verde); }
+  .badge-veiculo-tag { background: #FEF0E6; color: #B85000; }
+  .badge-imovel-tag { background: var(--verde-light); color: var(--verde); }
+  .badge-contemplado { background: #D8F3DC; color: #1B4332; }
+  .badge-auto { background: #E0F2FE; color: #0C4A6E; }
+  .chev { font-size: 18px; color: var(--texto-sec); transition: transform .2s; line-height: 1; }
+  .chev.open { transform: rotate(180deg); }
+  .client-body { display: none; padding: 14px 16px; border-top: 1px solid var(--cinza-borda); }
+  .client-body.open { display: block; }
+  .info-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .info-pill { font-size: 12px; padding: 4px 11px; border-radius: 10px; background: var(--cinza-bg); color: var(--texto-sec); border: 1px solid var(--cinza-borda); }
+  .msg-preview { background: #F7FAF7; border: 1px solid var(--verde-border); border-radius: var(--radius-sm); padding: 13px 15px; font-size: 13px; line-height: 1.85; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; color: var(--texto); font-family: inherit; }
+  .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .no-results { text-align: center; color: var(--texto-sec); padding: 2rem 0; font-size: 14px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.hidden { display: none; }
+  .modal { background: #fff; border-radius: var(--radius); max-width: 560px; width: 100%; padding: 24px; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--verde); }
+  .modal .field { margin-bottom: 12px; }
+  .modal label { font-size: 12px; color: var(--texto-sec); display: block; margin-bottom: 4px; }
+  .modal input, .modal select { width: 100%; padding: 9px 12px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; }
+  .modal input:focus, .modal select:focus { outline: none; border-color: var(--verde-mid); }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .toaster { position: fixed; bottom: 24px; right: 24px; background: var(--verde); color: #fff; padding: 12px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 500; z-index: 300; opacity: 0; transform: translateY(10px); transition: all .25s; pointer-events: none; max-width: 360px; }
+  .toaster.show { opacity: 1; transform: translateY(0); }
+  .toaster.error { background: #991B1B; }
+
+  /* PREVIEW TABLE (after PDF parse) */
+  .preview-table-wrap { max-height: 260px; overflow-y: auto; border: 1px solid var(--cinza-borda); border-radius: var(--radius-sm); margin-bottom: 14px; }
+  table.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.preview-table th { background: var(--verde-light); color: var(--verde); text-align: left; padding: 7px 10px; position: sticky; top: 0; }
+  table.preview-table td { padding: 6px 10px; border-top: 1px solid var(--cinza-borda); }
+  table.preview-table tr:nth-child(even) { background: #FAFCFA; }
+
+  @media(max-width: 600px) {
+    header { padding: 0 1rem; }
+    main { padding: 1rem; }
+    .field-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ABA CLIENTES — TABELA */
+  .clientes-toolbar { display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .clientes-toolbar input[type="text"] {
+    flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--cinza-borda);
+    border-radius: var(--radius-sm); font-size: 13px; background: #fff; color: var(--texto); outline: none;
+  }
+  .clientes-toolbar input[type="text"]:focus { border-color: var(--verde-mid); }
+  .clientes-toolbar select { padding: 9px 12px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; background:#fff; color: var(--texto); }
+  .bulk-bar { display: none; align-items: center; gap: 10px; background: var(--laranja-light); border: 1px solid #F3C9A0; border-radius: var(--radius-sm); padding: 9px 14px; margin-bottom: 12px; font-size: 13px; color: #7D3B0A; }
+  .bulk-bar.show { display: flex; }
+  .bulk-bar b { font-weight: 700; }
+  .clientes-table-wrap { background: #fff; border: 1px solid var(--cinza-borda); border-radius: var(--radius); overflow: hidden; }
+  table.clientes-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.clientes-table th { background: var(--cinza-bg); color: var(--texto-sec); text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--cinza-borda); white-space: nowrap; }
+  table.clientes-table td { padding: 9px 12px; border-bottom: 1px solid var(--cinza-borda); vertical-align: middle; }
+  table.clientes-table tr:last-child td { border-bottom: none; }
+  table.clientes-table tr:hover td { background: #FAFCFA; }
+  table.clientes-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--verde-mid); cursor: pointer; }
+  .table-actions { display: flex; gap: 6px; }
+  .table-actions button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 4px 7px; border-radius: 5px; color: var(--texto-sec); }
+  .table-actions button:hover { background: var(--cinza-bg); }
+  .table-actions button.danger:hover { background: #FEE2E2; color: #991B1B; }
+  .seg-tag { font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+  .seg-tag.imoveis { background: var(--verde-light); color: var(--verde); }
+  .seg-tag.veiculos { background: #FEF0E6; color: #B85000; }
+  .table-pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; color: var(--texto-sec); border-top: 1px solid var(--cinza-borda); }
+  .table-pagination .pg-btns { display: flex; gap: 6px; }
+  .table-pagination button { padding: 5px 11px; font-size: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--cinza-borda); background: #fff; cursor: pointer; }
+  .table-pagination button:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* UPLOAD EXCEL */
+  .excel-upload-box {
+    border: 2px dashed var(--verde-border); border-radius: var(--radius);
+    padding: 26px; text-align: center; background: #FAFCFA; margin-bottom: 16px;
+    transition: border-color .15s, background .15s; cursor: pointer; position: relative;
+  }
+  .excel-upload-box:hover, .excel-upload-box.dragover { border-color: var(--verde-mid); background: var(--verde-light); }
+  .excel-upload-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  /* MAPEAMENTO DE COLUNAS */
+  .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-bottom: 14px; }
+  .map-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .map-row label { min-width: 110px; color: var(--texto-sec); font-weight: 600; flex-shrink: 0; }
+  .map-row select { flex: 1; padding: 7px 9px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; }
+
+  /* IMPORT MODAL (maior) */
+  .modal-lg { max-width: 760px; }
+  .import-steps { display: flex; gap: 0; margin-bottom: 18px; }
+  .import-step { flex: 1; text-align: center; font-size: 12px; color: var(--texto-sec); padding-bottom: 8px; border-bottom: 2px solid var(--cinza-borda); }
+  .import-step.active { color: var(--verde); border-bottom-color: var(--verde); font-weight: 600; }
+  .radio-row { display: flex; gap: 16px; margin-bottom: 14px; font-size: 13px; }
+  .radio-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; color: var(--texto); }
+  .radio-row input[type="radio"] { width: 15px; height: 15px; accent-color: var(--verde-mid); cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">A</div>
+    <div>
+      <div class="logo-text">Ademicon — Painel de Assembleias</div>
+      <div class="logo-sub">Mensagens de acompanhamento por cliente</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="assembleia-badge" id="badgeData">Assembleia: —</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('imoveis',this)">
+      🏠 Consórcio de Imóveis <span class="count" id="countImoveis">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('veiculos',this)">
+      🚗 Consórcio de Veículos <span class="count" id="countVeiculos">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('clientes',this)">
+      👥 Clientes <span class="count" id="countClientesTab">0</span>
+    </button>
+  </div>
+
+  <!-- TAB IMÓVEIS -->
+  <div class="tab-panel active" id="tab-imoveis">
+
+    <!-- Assembleia Editor -->
+    <div class="assembleia-box">
+      <div class="assembleia-header" onclick="toggleAssembleia()">
+        <h3>⚙️ Configurar resultado da assembleia (imóveis)</h3>
+        <span style="font-size:12px;color:var(--verde);">Clique para expandir</span>
+      </div>
+      <div class="assembleia-body" id="assembleiaBody">
+        <div class="data-row">
+          <div>
+            <label style="font-size:12px;color:var(--texto-sec);display:block;margin-bottom:4px;">Data da assembleia</label>
+            <input type="date" id="dataAssembleia" onchange="salvarConfig()"/>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:var(--texto-sec);margin-bottom:10px;font-weight:600;">📄 Importar resultado direto do PDF da Ademicon</p>
+        <div class="upload-box" id="uploadBoxImoveis">
+          <input type="file" id="pdfInputImoveis" accept="application/pdf" onchange="handlePdfUpload(event,'imoveis')"/>
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">Clique ou arraste o PDF da assembleia aqui</div>
+          <div class="upload-sub">O sistema lê automaticamente todos os grupos e cotas contempladas</div>
+        </div>
+        <div class="upload-status" id="uploadStatusImoveis"></div>
+        <div id="previewWrapImoveis"></div>
+
+        <div class="divider-or">ou cadastre manualmente</div>
+
+        <p style="font-size:12px;color:var(--texto-sec);margin-bottom:12px;">Informe o número de contemplações por grupo (sem detalhar as cotas).</p>
+        <div class="field-row">
+          <div>
+            <label>Grupo</label>
+            <input type="text" id="novoGrupo" placeholder="ex: 12173"/>
+          </div>
+          <div>
+            <label>Total contemplados</label>
+            <input type="number" id="novoTotal" placeholder="ex: 8"/>
+          </div>
+          <div>
+            <label>Tipos (resumo)</label>
+            <input type="text" id="novoTipos" placeholder="ex: 1 Sorteio, 5 Lance Livre"/>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="adicionarGrupo()">+ Adicionar</button>
+          </div>
+        </div>
+        <div class="assembleia-list" id="assembleiaList"></div>
+        <div class="hint">💡 Ao importar o PDF, o sistema já sabe exatamente quais cotas foram contempladas — não precisa marcar cliente por cliente. O cadastro manual acima é só um complemento, caso falte algum grupo.</div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="limparGrupos()">Limpar todos os grupos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="statsImoveis"></div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <input type="text" id="searchImoveis" placeholder="Buscar por nome, grupo ou cota..." oninput="renderClientes('imoveis')"/>
+      <div class="view-toggle" id="viewToggleImoveis">
+        <button class="view-toggle-btn active" onclick="setViewMode('imoveis','unificado',this)">👤 Por cliente</button>
+        <button class="view-toggle-btn" onclick="setViewMode('imoveis','individual',this)">🎫 Por cota</button>
+      </div>
+      <button class="btn btn-outline" onclick="abrirModal('imoveis')">+ Adicionar cliente</button>
+      <button class="btn btn-primary" onclick="copiarTodas('imoveis')">Copiar todas as mensagens</button>
+    </div>
+
+    <!-- Client list -->
+    <div class="client-grid" id="listaImoveis"></div>
+  </div>
+
+  <!-- TAB VEÍCULOS -->
+  <div class="tab-panel" id="tab-veiculos">
+
+    <div class="assembleia-box">
+      <div class="assembleia-header" onclick="toggleAssembleiaVeic()">
+        <h3>⚙️ Configurar resultado da assembleia (veículos)</h3>
+        <span style="font-size:12px;color:var(--verde);">Clique para expandir</span>
+      </div>
+      <div class="assembleia-body" id="assembleiaBodyVeic">
+        <div class="data-row">
+          <div>
+            <label style="font-size:12px;color:var(--texto-sec);display:block;margin-bottom:4px;">Data da assembleia</label>
+            <input type="date" id="dataAssembleiaVeic" onchange="salvarConfigVeic()"/>
+          </div>
+        </div>
+
+        <p style="font-size:12px;color:var(--texto-sec);margin-bottom:10px;font-weight:600;">📄 Importar resultado direto do PDF da Ademicon</p>
+        <div class="upload-box" id="uploadBoxVeiculos">
+          <input type="file" id="pdfInputVeiculos" accept="application/pdf" onchange="handlePdfUpload(event,'veiculos')"/>
+          <div class="upload-icon">📄</div>
+          <div class="upload-title">Clique ou arraste o PDF da assembleia aqui</div>
+          <div class="upload-sub">O sistema lê automaticamente todos os grupos e cotas contempladas</div>
+        </div>
+        <div class="upload-status" id="uploadStatusVeiculos"></div>
+        <div id="previewWrapVeiculos"></div>
+
+        <div class="divider-or">ou cadastre manualmente</div>
+
+        <p style="font-size:12px;color:var(--texto-sec);margin-bottom:12px;">Informe o número de contemplações por grupo de veículos.</p>
+        <div class="field-row">
+          <div>
+            <label>Grupo</label>
+            <input type="text" id="novoGrupoVeic" placeholder="ex: 1696"/>
+          </div>
+          <div>
+            <label>Total contemplados</label>
+            <input type="number" id="novoTotalVeic" placeholder="ex: 5"/>
+          </div>
+          <div>
+            <label>Tipos (resumo)</label>
+            <input type="text" id="novoTiposVeic" placeholder="ex: 1 Sorteio, 3 Lance Livre"/>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="adicionarGrupoVeic()">+ Adicionar</button>
+          </div>
+        </div>
+        <div class="assembleia-list" id="assembleiaListVeic"></div>
+        <div class="hint">💡 Cadastre os resultados das assembleias de veículos separadamente.</div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-outline" onclick="limparGruposVeic()">Limpar todos os grupos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsVeiculos"></div>
+    <div class="toolbar">
+      <input type="text" id="searchVeiculos" placeholder="Buscar por nome, grupo ou cota..." oninput="renderClientes('veiculos')"/>
+      <div class="view-toggle" id="viewToggleVeiculos">
+        <button class="view-toggle-btn active" onclick="setViewMode('veiculos','unificado',this)">👤 Por cliente</button>
+        <button class="view-toggle-btn" onclick="setViewMode('veiculos','individual',this)">🎫 Por cota</button>
+      </div>
+      <button class="btn btn-outline" onclick="abrirModal('veiculos')">+ Adicionar cliente</button>
+      <button class="btn btn-primary" onclick="copiarTodas('veiculos')">Copiar todas as mensagens</button>
+    </div>
+    <div class="client-grid" id="listaVeiculos"></div>
+  </div>
+
+  <!-- TAB CLIENTES -->
+  <div class="tab-panel" id="tab-clientes">
+
+    <div class="assembleia-box">
+      <div class="assembleia-header" onclick="toggleImportBox()">
+        <h3>📥 Importar clientes por planilha (Excel/CSV)</h3>
+        <span style="font-size:12px;color:var(--verde);" id="importBoxToggleLabel">Clique para expandir</span>
+      </div>
+      <div class="assembleia-body" id="importBoxBody">
+        <div class="excel-upload-box" id="excelUploadBox">
+          <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(event)"/>
+          <div class="upload-icon">📊</div>
+          <div class="upload-title">Clique ou arraste a planilha (.xlsx, .xls ou .csv) aqui</div>
+          <div class="upload-sub">Colunas aceitas: Nome, Telefone, Grupo, Cota, Valor, Segmento</div>
+        </div>
+        <div class="hint">💡 Baixe um modelo pronto para preencher: <a href="#" onclick="baixarModeloExcel();return false;" style="color:var(--verde);font-weight:600;">clique aqui para baixar a planilha modelo</a>.</div>
+      </div>
+    </div>
+
+    <div class="stats-row" id="statsClientes"></div>
+
+    <div class="clientes-toolbar">
+      <input type="text" id="searchClientes" placeholder="Buscar por nome, telefone, grupo ou cota..." oninput="renderTabelaClientes()"/>
+      <select id="filtroSegmentoClientes" onchange="renderTabelaClientes()">
+        <option value="todos">Todos os segmentos</option>
+        <option value="imoveis">🏠 Imóveis</option>
+        <option value="veiculos">🚗 Veículos</option>
+      </select>
+      <button class="btn btn-outline" onclick="abrirModalClienteGeral()">+ Adicionar cliente</button>
+    </div>
+
+    <div class="bulk-bar" id="bulkBar">
+      <span><b id="bulkCount">0</b> selecionado(s)</span>
+      <button class="btn btn-sm" style="background:#C0392B;color:#fff;border-color:#C0392B;" onclick="excluirSelecionados()">🗑️ Excluir selecionados</button>
+      <button class="btn btn-outline btn-sm" onclick="limparSelecao()">Cancelar seleção</button>
+    </div>
+
+    <div class="clientes-table-wrap">
+      <table class="clientes-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="checkAllClientes" onchange="toggleSelecionarTodos(this)"/></th>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Segmento</th>
+            <th>Grupo</th>
+            <th>Cota</th>
+            <th>Valor (R$)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaClientesBody"></tbody>
+      </table>
+      <div class="table-pagination" id="paginacaoClientes"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL IMPORTAÇÃO — MAPEAMENTO DE COLUNAS -->
+<div class="modal-overlay hidden" id="importModalOverlay">
+  <div class="modal modal-lg">
+    <h3>📊 Importar clientes da planilha</h3>
+    <p style="font-size:13px;color:var(--texto-sec);margin-bottom:14px;" id="importFileInfo"></p>
+
+    <p style="font-size:12px;font-weight:600;color:var(--texto-sec);margin-bottom:8px;">1. Associe cada coluna da planilha ao campo correto</p>
+    <div class="map-grid" id="mapeamentoColunas"></div>
+
+    <p style="font-size:12px;font-weight:600;color:var(--texto-sec);margin-bottom:8px;">2. Se a planilha não tiver uma coluna de segmento, escolha o destino padrão</p>
+    <div class="radio-row">
+      <label><input type="radio" name="segPadrao" value="imoveis" checked/> 🏠 Imóveis</label>
+      <label><input type="radio" name="segPadrao" value="veiculos"/> 🚗 Veículos</label>
+    </div>
+
+    <p style="font-size:12px;font-weight:600;color:var(--texto-sec);margin-bottom:8px;">3. Pré-visualização (<span id="previewCount">0</span> linhas encontradas)</p>
+    <div class="preview-table-wrap" id="importPreviewWrap" style="margin-bottom:6px;"></div>
+    <div class="hint" id="importWarnings" style="display:none;"></div>
+
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharImportModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarImportacao()">Importar clientes</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Adicionar cliente</h3>
+    <div class="field"><label>Nome completo</label><input id="mNome" type="text" placeholder="ex: João da Silva"/></div>
+    <div class="field"><label>Telefone (com DDD e código do país)</label><input id="mTel" type="text" placeholder="ex: +55(61) 99999-0000"/></div>
+    <div class="field"><label>Grupo</label><input id="mGrupo" type="text" placeholder="ex: 12173"/></div>
+    <div class="field"><label>Cota</label><input id="mCota" type="text" placeholder="ex: 4288"/></div>
+    <div class="field"><label>Valor da carta (R$)</label><input id="mValor" type="text" placeholder="ex: 80.000"/></div>
+    <div class="field"><label>Segmento</label>
+      <select id="mTipo">
+        <option value="imoveis">Imóveis</option>
+        <option value="veiculos">Veículos</option>
+      </select>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
+      <input type="checkbox" id="mContemplado" style="width:18px;height:18px;accent-color:#1B4332;cursor:pointer;"/>
+      <label for="mContemplado" style="margin-bottom:0;font-size:13px;cursor:pointer;">Forçar como contemplado (substitui a detecção automática)</label>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toaster" id="toaster"></div>
+
+<script>
+// ─── ESTADO ───────────────────────────────────────────────────────────────────
+let editIdx = null;
+let editSegmento = null;
+let modalSegmento = 'imoveis';
+
+const COLORS = [
+  {bg:'#D8F3DC',txt:'#1B4332'},{bg:'#FEF0E6',txt:'#7D3B0A'},
+  {bg:'#EDE9FE',txt:'#4C1D95'},{bg:'#E0F2FE',txt:'#0C4A6E'},
+  {bg:'#FEF9C3',txt:'#713F12'},{bg:'#FCE7F3',txt:'#831843'},
+];
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
+function load(key,def){ try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;} }
+function save(key,val){ try{localStorage.setItem(key,JSON.stringify(val));}catch(e){} }
+
+let clientesImoveis = load('clientesImoveis', []);
+
+let clientesVeiculos = load('clientesVeiculos', []);
+
+// gruposImoveis / gruposVeiculos agora guardam: { total, tipos, cotas: [{cota, tipo}, ...] }
+// "cotas" só existe quando vem de importação de PDF; cadastro manual só tem total/tipos.
+let gruposImoveis = load('gruposImoveis', {});
+
+let gruposVeiculos = load('gruposVeiculos', {});
+
+let dataImoveis = load('dataAssembleiaImoveis', '');
+let dataVeiculos = load('dataAssembleiaVeiculos', '');
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function primeiroNome(nome){ return nome.trim().split(' ')[0]; }
+function initials(nome){ const p=nome.trim().split(' ').filter(Boolean); return ((p[0]?.[0]||'')+(p[1]?.[0]||'')).toUpperCase(); }
+function cor(i){ return COLORS[i % COLORS.length]; }
+function telLimpo(tel){ return tel.replace(/\D/g,''); }
+function formatarData(d){ if(!d) return '—'; const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
+
+// Normaliza número de cota para comparação: remove pontos de milhar e zeros à esquerda.
+// PDF usa "3.952" (separador de milhar) e clientes cadastram "4288" (sem ponto).
+function normalizarCota(c){
+  if(c===undefined || c===null) return '';
+  let s = String(c).trim();
+  s = s.replace(/\./g, '');     // remove separador de milhar "3.952" -> "3952"
+  s = s.replace(/^0+(?=\d)/, ''); // remove zeros à esquerda
+  return s;
+}
+
+// Busca se a cota do cliente está na lista de cotas contempladas do grupo (vinda do PDF).
+function buscarContemplacaoPdf(grupoInfo, cotaCliente){
+  if(!grupoInfo || !Array.isArray(grupoInfo.cotas)) return null;
+  const alvo = normalizarCota(cotaCliente);
+  return grupoInfo.cotas.find(c => normalizarCota(c.cota) === alvo) || null;
+}
+
+function buildMsg(c, segmento){
+  const grupos = segmento==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const g = grupos[c.grupo];
+  const dataStr = segmento==='imoveis' ? formatarData(dataImoveis) : formatarData(dataVeiculos);
+  const tipo = segmento==='imoveis' ? 'imóveis' : 'veículos';
+
+  // 1) Detecção automática via PDF (prioridade)
+  const achadoPdf = buscarContemplacaoPdf(g, c.cota);
+  // 2) Override manual (checkbox) — só vale se não tiver dado de PDF pro grupo, ou se o usuário marcou manualmente
+  const contempladoManual = c.contemplado === true;
+
+  let linhaStatus = '';
+  if(achadoPdf){
+    linhaStatus = `Tenho uma ótima notícia: a sua cota ${c.cota} do grupo ${c.grupo} foi contemplada nesta assembleia, por ${achadoPdf.tipo}! Vou entrar em contato para alinharmos os próximos passos.`;
+  } else if(contempladoManual){
+    linhaStatus = `Tenho uma ótima notícia: a sua cota ${c.cota} do grupo ${c.grupo} foi contemplada nesta assembleia! Vou entrar em contato para alinharmos os próximos passos.`;
+  } else {
+    const movStr = g ? `O grupo teve ${g.total} contemplação${g.total>1?'ões':''} nesta assembleia, mostrando movimentação dentro do grupo.` : '';
+    linhaStatus = `A sua cota ${c.cota} do grupo ${c.grupo} ainda não foi contemplada nesta assembleia. ${movStr}`.trim();
+  }
+  return `${primeiroNome(c.nome)}, boa noite! Tudo bem?\n\nPassando para manter você atualizado sobre a assembleia de ${tipo} de ${dataStr !== '—' ? dataStr : 'deste mês'}.\n\n${linhaStatus}\n\nSeguimos acompanhando cada assembleia dentro da estratégia planejada para o investimento.\n\nEstou enviando também o resultado da assembleia para sua conferência.\n\nQualquer dúvida, fico à disposição.`;
+}
+
+function abrirWhatsApp(tel, msg){
+  const num = telLimpo(tel);
+  const url = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+// ─── AGRUPAMENTO POR CLIENTE (nome + telefone) ────────────────────────────────
+function chaveCliente(c){
+  const nomeNorm = c.nome.trim().toLowerCase().replace(/\s+/g,' ');
+  return nomeNorm + '|' + telLimpo(c.tel);
+}
+
+function agruparClientes(clientes){
+  const mapa = new Map();
+  clientes.forEach((c, idx)=>{
+    const k = chaveCliente(c);
+    if(!mapa.has(k)){
+      mapa.set(k, { nome: c.nome, tel: c.tel, cotas: [] });
+    }
+    mapa.get(k).cotas.push({ grupo: c.grupo, cota: c.cota, valor: c.valor, contemplado: c.contemplado, _origIdx: idx });
+  });
+  return [...mapa.values()];
+}
+
+function statusDaCota(grupoInfo, cotaObj){
+  const achadoPdf = buscarContemplacaoPdf(grupoInfo, cotaObj.cota);
+  if(achadoPdf) return { contemplada: true, tipo: achadoPdf.tipo, origemAuto: true };
+  if(cotaObj.contemplado === true) return { contemplada: true, tipo: null, origemAuto: false };
+  return { contemplada: false, tipo: null, origemAuto: false };
+}
+
+function buildMsgUnificada(clienteAgrupado, segmento){
+  const grupos = segmento==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const dataStr = segmento==='imoveis' ? formatarData(dataImoveis) : formatarData(dataVeiculos);
+  const tipoSeg = segmento==='imoveis' ? 'imóveis' : 'veículos';
+  const { nome, cotas } = clienteAgrupado;
+
+  const porGrupo = [];
+  const idxGrupo = {};
+  cotas.forEach(cotaObj=>{
+    if(idxGrupo[cotaObj.grupo] === undefined){
+      idxGrupo[cotaObj.grupo] = porGrupo.length;
+      porGrupo.push({ grupo: cotaObj.grupo, cotas: [] });
+    }
+    porGrupo[idxGrupo[cotaObj.grupo]].cotas.push(cotaObj);
+  });
+
+  const algumaContemplada = cotas.some(cotaObj => statusDaCota(grupos[cotaObj.grupo], cotaObj).contemplada);
+
+  let blocos = [];
+  porGrupo.forEach(({grupo, cotas:cotasDoGrupo})=>{
+    const gi = grupos[grupo];
+    const totalGrupo = gi ? `${gi.total} ${gi.total>1?'contemplações':'contemplação'}` : 'resultado ainda não cadastrado';
+    let linhasCota = cotasDoGrupo.map(cotaObj=>{
+      const status = statusDaCota(gi, cotaObj);
+      if(status.contemplada){
+        const tipoTxt = status.tipo ? `, por ${status.tipo}` : '';
+        return `  • Cota ${cotaObj.cota}: ✅ contemplada${tipoTxt}`;
+      }
+      return `  • Cota ${cotaObj.cota}: ainda não contemplada`;
+    });
+    blocos.push(`Grupo ${grupo} (${totalGrupo} nesta assembleia):\n${linhasCota.join('\n')}`);
+  });
+
+  const abertura = algumaContemplada
+    ? `Tenho uma ótima notícia pra te dar sobre a assembleia de ${tipoSeg} de ${dataStr !== '—' ? dataStr : 'deste mês'}!`
+    : `Passando para manter você atualizado sobre a assembleia de ${tipoSeg} de ${dataStr !== '—' ? dataStr : 'deste mês'}.`;
+
+  const fechamento = algumaContemplada
+    ? `Vou entrar em contato para alinharmos os próximos passos da(s) cota(s) contemplada(s).\n\nSeguimos acompanhando cada assembleia dentro da estratégia planejada para o investimento.\n\nEstou enviando também o resultado da assembleia para sua conferência.\n\nQualquer dúvida, fico à disposição.`
+    : `Seguimos acompanhando cada assembleia dentro da estratégia planejada para o investimento.\n\nEstou enviando também o resultado da assembleia para sua conferência.\n\nQualquer dúvida, fico à disposição.`;
+
+  return `${primeiroNome(nome)}, boa noite! Tudo bem?\n\n${abertura}\n\n${blocos.join('\n\n')}\n\n${fechamento}`;
+}
+
+function toast(msg, isError){
+  const t = document.getElementById('toaster');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ─── MODO DE VISUALIZAÇÃO ────────────────────────────────────────────────────
+let viewMode = { imoveis: load('viewModeImoveis','unificado'), veiculos: load('viewModeVeiculos','unificado') };
+
+function setViewMode(seg, modo, btn){
+  viewMode[seg] = modo;
+  save('viewMode'+(seg==='imoveis'?'Imoveis':'Veiculos'), modo);
+  const wrap = document.getElementById('viewToggle'+(seg==='imoveis'?'Imoveis':'Veiculos'));
+  wrap.querySelectorAll('.view-toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClientes(seg);
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── ASSEMBLEIA CONFIG ────────────────────────────────────────────────────────
+function toggleAssembleia(){ document.getElementById('assembleiaBody').classList.toggle('open'); }
+function toggleAssembleiaVeic(){ document.getElementById('assembleiaBodyVeic').classList.toggle('open'); }
+
+function renderGruposList(seg){
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const listId = seg==='imoveis' ? 'assembleiaList' : 'assembleiaListVeic';
+  const list = document.getElementById(listId);
+  list.innerHTML = Object.entries(grupos).map(([g,v])=>`
+    <div class="assembleia-item">
+      <span class="grp">Grupo ${g}</span>
+      <span class="contemp">${v.total} contemplação${v.total>1?'ões':''} — ${v.tipos}</span>
+      ${Array.isArray(v.cotas) ? `<span class="cotas-tag">📄 ${v.cotas.length} cotas do PDF</span>` : ''}
+      <button onclick="removerGrupo('${g}','${seg}')" title="Remover">✕</button>
+    </div>`).join('') || '<p style="font-size:13px;color:#999;padding:8px 0;">Nenhum grupo cadastrado.</p>';
+}
+
+function adicionarGrupo(){
+  const g = document.getElementById('novoGrupo').value.trim();
+  const t = parseInt(document.getElementById('novoTotal').value);
+  const tipos = document.getElementById('novoTipos').value.trim();
+  if(!g||!t) return toast('Informe grupo e total de contemplações.', true);
+  const cotasExistentes = gruposImoveis[g] && gruposImoveis[g].cotas;
+  gruposImoveis[g] = {total:t, tipos:tipos||'—', ...(cotasExistentes ? {cotas:cotasExistentes} : {})};
+  document.getElementById('novoGrupo').value='';
+  document.getElementById('novoTotal').value='';
+  document.getElementById('novoTipos').value='';
+  salvarConfig();
+  renderGruposList('imoveis');
+  renderClientes('imoveis');
+  toast('Grupo adicionado!');
+}
+
+function adicionarGrupoVeic(){
+  const g = document.getElementById('novoGrupoVeic').value.trim();
+  const t = parseInt(document.getElementById('novoTotalVeic').value);
+  const tipos = document.getElementById('novoTiposVeic').value.trim();
+  if(!g||!t) return toast('Informe grupo e total de contemplações.', true);
+  const cotasExistentes = gruposVeiculos[g] && gruposVeiculos[g].cotas;
+  gruposVeiculos[g] = {total:t, tipos:tipos||'—', ...(cotasExistentes ? {cotas:cotasExistentes} : {})};
+  document.getElementById('novoGrupoVeic').value='';
+  document.getElementById('novoTotalVeic').value='';
+  document.getElementById('novoTiposVeic').value='';
+  salvarConfigVeic();
+  renderGruposList('veiculos');
+  renderClientes('veiculos');
+  toast('Grupo adicionado!');
+}
+
+function removerGrupo(g, seg){
+  if(seg==='imoveis'){ delete gruposImoveis[g]; salvarConfig(); }
+  else { delete gruposVeiculos[g]; salvarConfigVeic(); }
+  renderGruposList(seg);
+  renderClientes(seg);
+}
+
+function limparGrupos(){ if(!confirm('Limpar todos os grupos de imóveis?')) return; gruposImoveis={}; salvarConfig(); renderGruposList('imoveis'); renderClientes('imoveis'); }
+function limparGruposVeic(){ if(!confirm('Limpar todos os grupos de veículos?')) return; gruposVeiculos={}; salvarConfigVeic(); renderGruposList('veiculos'); renderClientes('veiculos'); }
+
+function salvarConfig(){
+  dataImoveis = document.getElementById('dataAssembleia').value;
+  save('gruposImoveis', gruposImoveis);
+  save('dataAssembleiaImoveis', dataImoveis);
+  document.getElementById('badgeData').textContent = 'Assembleia: '+formatarData(dataImoveis);
+  renderClientes('imoveis');
+}
+function salvarConfigVeic(){
+  dataVeiculos = document.getElementById('dataAssembleiaVeic').value;
+  save('gruposVeiculos', gruposVeiculos);
+  save('dataAssembleiaVeiculos', dataVeiculos);
+  renderClientes('veiculos');
+}
+
+// ─── IMPORTAÇÃO DE PDF ────────────────────────────────────────────────────────
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║  REGEX CORRIGIDA v2 — compatível com imóveis E veículos                    ║
+// ║                                                                              ║
+// ║  Mudanças em relação à versão anterior:                                      ║
+// ║  1. Campo PARCELAS agora aceita tanto número inteiro / QUIT (imóveis)        ║
+// ║     quanto valor percentual com vírgula como "50,0000%" (veículos)           ║
+// ║  2. Tipos agora incluem "2o Lance Fixo" / "2º Lance Fixo" (veículos)         ║
+// ║     além dos tipos já suportados: Sorteio, Lance Livre, Lance Limitado,      ║
+// ║     Lance Fixo, Lance Fidelidade                                              ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
+const LINHA_COTA_REGEX = /^([\d.]+)\s+(\d+)\s+([\d.]+)\s+(Sorteio|Lance Livre|Lance Limitado|Lance Fix[oa]|Lance Fidelidade|2[º°o]?\s*Lance Fix[oa])\s+(QUIT|[\d.,]+%?)\s+(\d{2,6})\s*(.*)$/;
+
+async function extrairTextoPdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+  let linhas = [];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const itens = content.items
+      .filter(it => it.str !== undefined)
+      .map(it => ({ x: it.transform[4], y: it.transform[5], str: it.str }))
+      .sort((a,b) => b.y - a.y || a.x - b.x);
+
+    const TOLERANCIA = 3;
+    const clusters = [];
+    let atual = [];
+    let yRef = null;
+    itens.forEach(it=>{
+      if(yRef === null || Math.abs(it.y - yRef) <= TOLERANCIA){
+        atual.push(it);
+        if(yRef === null) yRef = it.y;
+      } else {
+        clusters.push(atual);
+        atual = [it];
+        yRef = it.y;
+      }
+    });
+    if(atual.length) clusters.push(atual);
+
+    clusters.forEach(cluster=>{
+      const ordenado = cluster.slice().sort((a,b)=>a.x-b.x);
+      const texto = ordenado.map(it=>it.str).join(' ').replace(/\s+/g,' ').trim();
+      if(texto) linhas.push(texto);
+    });
+  }
+  return linhas;
+}
+
+function parseLinhasCotas(linhas){
+  const cotas = [];
+  linhas.forEach(linha=>{
+    const m = linha.match(LINHA_COTA_REGEX);
+    if(m){
+      const [, , grupo, cota, tipo] = m;
+      cotas.push({ grupo: grupo.trim(), cota: cota.trim(), tipo: tipo.trim() });
+    }
+  });
+  return cotas;
+}
+
+function agruparCotasPorGrupo(cotas){
+  const grupos = {};
+  cotas.forEach(({grupo, cota, tipo})=>{
+    if(!grupos[grupo]) grupos[grupo] = [];
+    grupos[grupo].push({cota, tipo});
+  });
+  const resultado = {};
+  Object.entries(grupos).forEach(([g, lista])=>{
+    const contagemTipos = {};
+    lista.forEach(l=>{ contagemTipos[l.tipo] = (contagemTipos[l.tipo]||0)+1; });
+    const tiposStr = Object.entries(contagemTipos).map(([t,n])=>`${n} ${t}`).join(', ');
+    resultado[g] = { total: lista.length, tipos: tiposStr, cotas: lista };
+  });
+  return resultado;
+}
+
+function setUploadStatus(seg, tipo, msg){
+  const elId = seg==='imoveis' ? 'uploadStatusImoveis' : 'uploadStatusVeiculos';
+  const el = document.getElementById(elId);
+  el.className = 'upload-status show ' + tipo;
+  el.textContent = msg;
+}
+
+function renderPreviewTabela(seg, gruposExtraidos){
+  const wrapId = seg==='imoveis' ? 'previewWrapImoveis' : 'previewWrapVeiculos';
+  const wrap = document.getElementById(wrapId);
+  const totalGrupos = Object.keys(gruposExtraidos).length;
+  const totalCotas = Object.values(gruposExtraidos).reduce((s,g)=>s+g.total,0);
+  let linhas = [];
+  Object.entries(gruposExtraidos).forEach(([g, info])=>{
+    info.cotas.forEach(c=>{
+      linhas.push(`<tr><td>${g}</td><td>${c.cota}</td><td>${c.tipo}</td></tr>`);
+    });
+  });
+  wrap.innerHTML = `
+    <p style="font-size:12px;color:var(--texto-sec);margin-bottom:8px;">${totalGrupos} grupos e ${totalCotas} cotas contempladas identificadas no PDF:</p>
+    <div class="preview-table-wrap">
+      <table class="preview-table">
+        <thead><tr><th>Grupo</th><th>Cota</th><th>Tipo</th></tr></thead>
+        <tbody>${linhas.join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+async function handlePdfUpload(event, seg){
+  const file = event.target.files[0];
+  if(!file) return;
+  setUploadStatus(seg, 'loading', `Lendo "${file.name}"...`);
+  const wrapId = seg==='imoveis' ? 'previewWrapImoveis' : 'previewWrapVeiculos';
+  document.getElementById(wrapId).innerHTML = '';
+
+  try {
+    if(!window.pdfjsLib) throw new Error('Biblioteca de leitura de PDF não carregou.');
+    const linhas = await extrairTextoPdf(file);
+    const cotas = parseLinhasCotas(linhas);
+
+    if(cotas.length === 0){
+      setUploadStatus(seg, 'error', '⚠️ Não consegui identificar a tabela de cotas contempladas neste PDF. Você pode cadastrar os grupos manualmente abaixo, ou tentar outro arquivo.');
+      return;
+    }
+
+    const gruposExtraidos = agruparCotasPorGrupo(cotas);
+
+    if(seg==='imoveis'){
+      gruposImoveis = { ...gruposImoveis, ...gruposExtraidos };
+      save('gruposImoveis', gruposImoveis);
+      renderGruposList('imoveis');
+      renderClientes('imoveis');
+    } else {
+      gruposVeiculos = { ...gruposVeiculos, ...gruposExtraidos };
+      save('gruposVeiculos', gruposVeiculos);
+      renderGruposList('veiculos');
+      renderClientes('veiculos');
+    }
+
+    const totalGrupos = Object.keys(gruposExtraidos).length;
+    setUploadStatus(seg, 'success', `✅ PDF importado! ${cotas.length} cotas contempladas em ${totalGrupos} grupos. As mensagens já foram atualizadas automaticamente.`);
+    renderPreviewTabela(seg, gruposExtraidos);
+    toast(`PDF importado: ${cotas.length} cotas em ${totalGrupos} grupos.`);
+  } catch(err){
+    console.error(err);
+    setUploadStatus(seg, 'error', '⚠️ Não foi possível ler este PDF automaticamente. Revise o arquivo ou cadastre os grupos manualmente abaixo.');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+// drag & drop visual
+['uploadBoxImoveis','uploadBoxVeiculos'].forEach(id=>{
+  const box = document.getElementById(id);
+  if(!box) return;
+  ['dragenter','dragover'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.remove('dragover'); }));
+  box.addEventListener('drop', e=>{
+    const file = e.dataTransfer.files[0];
+    if(!file) return;
+    const seg = id==='uploadBoxImoveis' ? 'imoveis' : 'veiculos';
+    const inputId = seg==='imoveis' ? 'pdfInputImoveis' : 'pdfInputVeiculos';
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById(inputId).files = dt.files;
+    handlePdfUpload({target:{files:[file], value:''}}, seg);
+  });
+});
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function renderStats(seg){
+  const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const grpSet = new Set(clientes.map(c=>c.grupo));
+  const id = seg==='imoveis' ? 'statsImoveis' : 'statsVeiculos';
+
+  const agrupados = agruparClientes(clientes);
+  const clientesContemplados = agrupados.filter(cli =>
+    cli.cotas.some(cotaObj => statusDaCota(grupos[cotaObj.grupo], cotaObj).contemplada)
+  ).length;
+  const multiCotaCount = agrupados.filter(cli => cli.cotas.length > 1).length;
+
+  document.getElementById(id).innerHTML = `
+    <div class="stat-card"><div class="stat-label">Clientes únicos</div><div class="stat-value">${agrupados.length}</div><div class="stat-sub">${clientes.length} cota${clientes.length>1?'s':''} no total</div></div>
+    <div class="stat-card"><div class="stat-label">Multicotas</div><div class="stat-value">${multiCotaCount}</div><div class="stat-sub">com mais de 1 cota</div></div>
+    <div class="stat-card"><div class="stat-label">Grupos com resultado</div><div class="stat-value">${[...grpSet].filter(g=>grupos[g]).length}</div><div class="stat-sub">de ${grpSet.size}</div></div>
+    <div class="stat-card"><div class="stat-label">Clientes contemplados</div><div class="stat-value">${clientesContemplados}</div><div class="stat-sub">nesta assembleia</div></div>
+  `;
+  document.getElementById('count'+( seg==='imoveis'?'Imoveis':'Veiculos')).textContent = clientes.length;
+}
+
+// ─── RENDER CLIENTES ─────────────────────────────────────────────────────────
+function renderClientes(seg){
+  renderStats(seg);
+  if(viewMode[seg] === 'individual'){
+    renderClientesIndividual(seg);
+  } else {
+    renderClientesUnificado(seg);
+  }
+}
+
+function renderClientesUnificado(seg){
+  const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const searchId = 'search'+(seg==='imoveis'?'Imoveis':'Veiculos');
+  const listId = 'lista'+(seg==='imoveis'?'Imoveis':'Veiculos');
+  const tagClass = seg==='imoveis' ? 'badge-imovel-tag' : 'badge-veiculo-tag';
+  const tagLabel = seg==='imoveis' ? '🏠 Imóveis' : '🚗 Veículos';
+  const s = (document.getElementById(searchId)?.value||'').toLowerCase();
+
+  const agrupados = agruparClientes(clientes);
+
+  const filtered = agrupados.filter(cli =>
+    !s ||
+    cli.nome.toLowerCase().includes(s) ||
+    cli.tel.includes(s) ||
+    cli.cotas.some(cotaObj => cotaObj.grupo.includes(s) || cotaObj.cota.includes(s))
+  );
+
+  const list = document.getElementById(listId);
+  if(!filtered.length){ list.innerHTML='<p class="no-results">Nenhum cliente encontrado.</p>'; return; }
+
+  list.innerHTML = filtered.map((cli,i)=>{
+    const av = cor(i);
+    const msg = buildMsgUnificada(cli, seg);
+    const multiCota = cli.cotas.length > 1;
+    const algumaContemplada = cli.cotas.some(cotaObj => statusDaCota(grupos[cotaObj.grupo], cotaObj).contemplada);
+    const gruposUnicos = [...new Set(cli.cotas.map(c=>c.grupo))];
+
+    const linhasCotaHtml = cli.cotas.map(cotaObj=>{
+      const gi = grupos[cotaObj.grupo];
+      const status = statusDaCota(gi, cotaObj);
+      const statusHtml = status.contemplada
+        ? `<span class="cota-status-ok">✅ Contemplada${status.tipo ? ' — '+status.tipo : ''}</span>`
+        : `<span class="cota-status-pendente">Ainda não contemplada${gi ? ' · grupo teve '+gi.total+' contempl.' : ''}</span>`;
+      return `
+        <div class="cota-linha">
+          <span class="cota-grupo">Grupo ${cotaObj.grupo}</span>
+          <span class="cota-num">Cota ${cotaObj.cota}</span>
+          ${cotaObj.valor ? `<span class="cota-num">R$ ${cotaObj.valor}</span>` : ''}
+          ${statusHtml}
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="client-card" id="${seg}card${i}">
+      <div class="client-header" onclick="toggleCard('${seg}',${i})">
+        <div class="client-left">
+          <div class="avatar" style="background:${av.bg};color:${av.txt}">${initials(cli.nome)}</div>
+          <div>
+            <div class="client-name">${cli.nome}</div>
+            <div class="client-sub">${cli.cotas.length} cota${cli.cotas.length>1?'s':''} · ${gruposUnicos.length} grupo${gruposUnicos.length>1?'s':''} · ${cli.tel}</div>
+          </div>
+        </div>
+        <div class="client-right">
+          <span class="badge ${tagClass}">${tagLabel}</span>
+          ${multiCota ? `<span class="multi-cota-tag">🎫 ${cli.cotas.length} cotas</span>` : ''}
+          ${algumaContemplada ? '<span class="badge badge-auto">✓ Contemplado</span>' : ''}
+          <span class="chev" id="${seg}chev${i}">▾</span>
+        </div>
+      </div>
+      <div class="client-body" id="${seg}body${i}">
+        <div class="info-pills">
+          <span class="info-pill">📞 ${cli.tel}</span>
+        </div>
+        <div style="margin-bottom:12px;">${linhasCotaHtml}</div>
+        <div class="msg-preview" id="${seg}msg${i}">${msg}</div>
+        <div class="action-row">
+          <button class="btn btn-whatsapp btn-sm" onclick="abrirWhatsApp('${cli.tel}', document.getElementById('${seg}msg${i}').textContent)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Enviar via WhatsApp
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="copiarMsg('${seg}',${i},this)">Copiar mensagem</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderClientesIndividual(seg){
+  const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const searchId = 'search'+(seg==='imoveis'?'Imoveis':'Veiculos');
+  const listId = 'lista'+(seg==='imoveis'?'Imoveis':'Veiculos');
+  const tagClass = seg==='imoveis' ? 'badge-imovel-tag' : 'badge-veiculo-tag';
+  const tagLabel = seg==='imoveis' ? '🏠 Imóveis' : '🚗 Veículos';
+  const s = (document.getElementById(searchId)?.value||'').toLowerCase();
+
+  const filtered = clientes.filter(c =>
+    !s || c.nome.toLowerCase().includes(s) || c.grupo.includes(s) || c.cota.includes(s) || c.tel.includes(s)
+  );
+
+  const list = document.getElementById(listId);
+  if(!filtered.length){ list.innerHTML='<p class="no-results">Nenhum cliente encontrado.</p>'; return; }
+
+  list.innerHTML = filtered.map((c,i)=>{
+    const realIdx = clientes.indexOf(c);
+    const av = cor(realIdx);
+    const msg = buildMsg(c, seg);
+    const gi = grupos[c.grupo];
+    const grpLabel = gi ? `Grupo ${c.grupo} — ${gi.total} contempl.` : `Grupo ${c.grupo}`;
+    const achadoPdf = buscarContemplacaoPdf(gi, c.cota);
+    const isContempladoAuto = !!achadoPdf;
+    const isContempladoManual = c.contemplado === true && !isContempladoAuto;
+
+    let badgeContemplado = '';
+    if(isContempladoAuto){
+      badgeContemplado = `<span class="badge badge-auto">✓ Contemplado (${achadoPdf.tipo})</span>`;
+    } else if(isContempladoManual){
+      badgeContemplado = `<span class="badge badge-contemplado">✓ Contemplado (manual)</span>`;
+    }
+
+    return `
+    <div class="client-card" id="${seg}card${i}">
+      <div class="client-header" onclick="toggleCard('${seg}',${i})">
+        <div class="client-left">
+          <div class="avatar" style="background:${av.bg};color:${av.txt}">${initials(c.nome)}</div>
+          <div>
+            <div class="client-name">${c.nome}</div>
+            <div class="client-sub">Cota ${c.cota} · ${c.tel}</div>
+          </div>
+        </div>
+        <div class="client-right">
+          <span class="badge ${tagClass}">${tagLabel}</span>
+          <span class="badge badge-grupo">${grpLabel}</span>
+          ${badgeContemplado}
+          <span class="chev" id="${seg}chev${i}">▾</span>
+        </div>
+      </div>
+      <div class="client-body" id="${seg}body${i}">
+        <div class="info-pills">
+          <span class="info-pill">📞 ${c.tel}</span>
+          <span class="info-pill">Grupo ${c.grupo}</span>
+          <span class="info-pill">Cota ${c.cota}</span>
+          <span class="info-pill">R$ ${c.valor}</span>
+        </div>
+        <div class="msg-preview" id="${seg}msg${i}">${msg}</div>
+        <div class="action-row">
+          <button class="btn btn-whatsapp btn-sm" onclick="abrirWhatsApp('${c.tel}', document.getElementById('${seg}msg${i}').textContent)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Enviar via WhatsApp
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="copiarMsg('${seg}',${i},this)">Copiar mensagem</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleContemplado('${seg}',${realIdx},this)" ${isContempladoAuto ? 'disabled title="Detectado automaticamente pelo PDF"' : ''} style="${isContempladoManual?'color:#1B4332;border-color:#B7E4C7;':''}">${isContempladoManual?'Remover marcação manual':'Marcar como contemplado (manual)'}</button>
+          <button class="btn btn-outline btn-sm" onclick="editarCliente('${seg}',${realIdx})">Editar</button>
+          <button class="btn btn-outline btn-sm" style="color:#C0392B;border-color:#ECC;" onclick="removerCliente('${seg}',${realIdx})">Remover</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(seg,i){
+  document.getElementById(seg+'body'+i).classList.toggle('open');
+  document.getElementById(seg+'chev'+i).classList.toggle('open');
+}
+
+function copiarMsg(seg,i,btn){
+  const txt = document.getElementById(seg+'msg'+i).textContent;
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='Copiada!'; setTimeout(()=>btn.textContent='Copiar mensagem',2000);
+  });
+}
+
+function copiarTodas(seg){
+  let txt;
+  if(viewMode[seg] === 'individual'){
+    const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+    txt = clientes.map(c=>`=== ${c.nome} | Grupo ${c.grupo} | Cota ${c.cota} | ${c.tel} ===\n${buildMsg(c,seg)}`).join('\n\n---\n\n');
+  } else {
+    const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+    const agrupados = agruparClientes(clientes);
+    txt = agrupados.map(cli=>{
+      const gruposStr = [...new Set(cli.cotas.map(c=>c.grupo))].join(', ');
+      return `=== ${cli.nome} | Grupo(s) ${gruposStr} | ${cli.tel} ===\n${buildMsgUnificada(cli,seg)}`;
+    }).join('\n\n---\n\n');
+  }
+  navigator.clipboard.writeText(txt).then(()=>toast('Todas as mensagens copiadas!'));
+}
+
+// ─── MODAL ────────────────────────────────────────────────────────────────────
+function abrirModal(seg){
+  modalSegmento = seg;
+  editIdx = null;
+  document.getElementById('modalTitle').textContent = 'Adicionar cliente';
+  document.getElementById('modalSaveBtn').textContent = 'Salvar';
+  ['mNome','mTel','mGrupo','mCota','mValor'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mTipo').value = seg;
+  document.getElementById('mContemplado').checked = false;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function abrirModalClienteGeral(){
+  const segPadrao = document.getElementById('filtroSegmentoClientes').value;
+  abrirModal(segPadrao === 'veiculos' ? 'veiculos' : 'imoveis');
+}
+
+function editarCliente(seg, idx){
+  const c = seg==='imoveis' ? clientesImoveis[idx] : clientesVeiculos[idx];
+  editIdx = idx; editSegmento = seg; modalSegmento = seg;
+  document.getElementById('modalTitle').textContent = 'Editar cliente';
+  document.getElementById('modalSaveBtn').textContent = 'Atualizar';
+  document.getElementById('mNome').value = c.nome;
+  document.getElementById('mTel').value = c.tel;
+  document.getElementById('mGrupo').value = c.grupo;
+  document.getElementById('mCota').value = c.cota;
+  document.getElementById('mValor').value = c.valor;
+  document.getElementById('mTipo').value = seg;
+  document.getElementById('mContemplado').checked = !!c.contemplado;
+  document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function fecharModal(){ document.getElementById('modalOverlay').classList.add('hidden'); editIdx=null; }
+
+function salvarCliente(){
+  const nome=document.getElementById('mNome').value.trim();
+  const tel=document.getElementById('mTel').value.trim();
+  const grupo=document.getElementById('mGrupo').value.trim();
+  const cota=document.getElementById('mCota').value.trim();
+  const valor=document.getElementById('mValor').value.trim();
+  const tipo=document.getElementById('mTipo').value;
+  const contemplado=document.getElementById('mContemplado').checked;
+  if(!nome||!tel||!grupo||!cota) return toast('Preencha nome, telefone, grupo e cota.', true);
+  const obj={nome,tel,grupo,cota,valor,contemplado};
+  if(editIdx!==null){
+    if(editSegmento==='imoveis') clientesImoveis[editIdx]=obj;
+    else clientesVeiculos[editIdx]=obj;
+  } else {
+    if(tipo==='imoveis') clientesImoveis.push(obj);
+    else clientesVeiculos.push(obj);
+  }
+  save('clientesImoveis', clientesImoveis);
+  save('clientesVeiculos', clientesVeiculos);
+  fecharModal();
+  renderClientes('imoveis');
+  renderClientes('veiculos');
+  renderTabelaClientes();
+  toast(editIdx!==null?'Cliente atualizado!':'Cliente adicionado!');
+}
+
+function toggleContemplado(seg, idx, btn){
+  const clientes = seg==='imoveis' ? clientesImoveis : clientesVeiculos;
+  clientes[idx].contemplado = !clientes[idx].contemplado;
+  save('clientesImoveis', clientesImoveis);
+  save('clientesVeiculos', clientesVeiculos);
+  renderClientes(seg);
+  toast(clientes[idx].contemplado ? 'Cota marcada como contemplada (manual)!' : 'Marcação manual removida.');
+}
+
+function removerCliente(seg, idx){
+  if(!confirm('Remover este cliente?')) return;
+  if(seg==='imoveis') clientesImoveis.splice(idx,1);
+  else clientesVeiculos.splice(idx,1);
+  save('clientesImoveis', clientesImoveis);
+  save('clientesVeiculos', clientesVeiculos);
+  renderClientes('imoveis');
+  renderClientes('veiculos');
+  renderTabelaClientes();
+  toast('Cliente removido.');
+}
+
+// ─── ABA CLIENTES — TABELA UNIFICADA ─────────────────────────────────────────
+let selecionados = new Set(); // chaves "seg|idx"
+let paginaClientesAtual = 1;
+const ITENS_POR_PAGINA = 15;
+
+function listaClientesCompleta(){
+  const lista = [];
+  clientesImoveis.forEach((c,idx)=>lista.push({...c, _seg:'imoveis', _idx:idx}));
+  clientesVeiculos.forEach((c,idx)=>lista.push({...c, _seg:'veiculos', _idx:idx}));
+  return lista;
+}
+
+function renderStatsClientes(){
+  const todos = listaClientesCompleta();
+  const agrupadosImoveis = agruparClientes(clientesImoveis);
+  const agrupadosVeiculos = agruparClientes(clientesVeiculos);
+  const totalUnicos = new Set([
+    ...clientesImoveis.map(chaveCliente),
+    ...clientesVeiculos.map(chaveCliente)
+  ]).size;
+
+  document.getElementById('statsClientes').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Clientes únicos</div><div class="stat-value">${totalUnicos}</div><div class="stat-sub">${todos.length} cota(s) no total</div></div>
+    <div class="stat-card"><div class="stat-label">Cotas — Imóveis</div><div class="stat-value">${clientesImoveis.length}</div><div class="stat-sub">${agrupadosImoveis.length} cliente(s)</div></div>
+    <div class="stat-card"><div class="stat-label">Cotas — Veículos</div><div class="stat-value">${clientesVeiculos.length}</div><div class="stat-sub">${agrupadosVeiculos.length} cliente(s)</div></div>
+  `;
+  document.getElementById('countClientesTab').textContent = todos.length;
+}
+
+function renderTabelaClientes(){
+  renderStatsClientes();
+  const s = (document.getElementById('searchClientes')?.value||'').toLowerCase();
+  const filtroSeg = document.getElementById('filtroSegmentoClientes')?.value || 'todos';
+
+  let lista = listaClientesCompleta();
+  if(filtroSeg !== 'todos') lista = lista.filter(c=>c._seg===filtroSeg);
+  if(s){
+    lista = lista.filter(c=>
+      c.nome.toLowerCase().includes(s) ||
+      c.tel.includes(s) ||
+      c.grupo.includes(s) ||
+      c.cota.includes(s)
+    );
+  }
+
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / ITENS_POR_PAGINA));
+  if(paginaClientesAtual > totalPaginas) paginaClientesAtual = totalPaginas;
+  const inicio = (paginaClientesAtual-1)*ITENS_POR_PAGINA;
+  const pagina = lista.slice(inicio, inicio+ITENS_POR_PAGINA);
+
+  const tbody = document.getElementById('tabelaClientesBody');
+  if(!lista.length){
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem 0;color:var(--texto-sec);">Nenhum cliente encontrado.</td></tr>`;
+    document.getElementById('paginacaoClientes').innerHTML = '';
+    atualizarBulkBar();
+    return;
+  }
+
+  tbody.innerHTML = pagina.map(c=>{
+    const chave = c._seg+'|'+c._idx;
+    const checked = selecionados.has(chave) ? 'checked' : '';
+    const segLabel = c._seg==='imoveis' ? '🏠 Imóveis' : '🚗 Veículos';
+    const segClass = c._seg;
+    return `
+    <tr>
+      <td><input type="checkbox" data-chave="${chave}" ${checked} onchange="toggleSelecionado('${chave}', this)"/></td>
+      <td>${c.nome}</td>
+      <td>${c.tel}</td>
+      <td><span class="seg-tag ${segClass}">${segLabel}</span></td>
+      <td>${c.grupo}</td>
+      <td>${c.cota}</td>
+      <td>${c.valor||'—'}</td>
+      <td>
+        <div class="table-actions">
+          <button onclick="editarCliente('${c._seg}',${c._idx})" title="Editar">✏️</button>
+          <button class="danger" onclick="removerCliente('${c._seg}',${c._idx})" title="Excluir">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('paginacaoClientes').innerHTML = `
+    <span>${lista.length} cliente(s) — página ${paginaClientesAtual} de ${totalPaginas}</span>
+    <div class="pg-btns">
+      <button onclick="mudarPaginaClientes(-1)" ${paginaClientesAtual<=1?'disabled':''}>← Anterior</button>
+      <button onclick="mudarPaginaClientes(1)" ${paginaClientesAtual>=totalPaginas?'disabled':''}>Próxima →</button>
+    </div>`;
+
+  document.getElementById('checkAllClientes').checked = pagina.length>0 && pagina.every(c=>selecionados.has(c._seg+'|'+c._idx));
+  atualizarBulkBar();
+}
+
+function mudarPaginaClientes(delta){
+  paginaClientesAtual += delta;
+  renderTabelaClientes();
+}
+
+function toggleSelecionado(chave, input){
+  if(input.checked) selecionados.add(chave);
+  else selecionados.delete(chave);
+  atualizarBulkBar();
+}
+
+function toggleSelecionarTodos(checkbox){
+  const linhas = document.querySelectorAll('#tabelaClientesBody input[type="checkbox"]');
+  linhas.forEach(inp=>{
+    const chave = inp.getAttribute('data-chave');
+    if(checkbox.checked) selecionados.add(chave);
+    else selecionados.delete(chave);
+    inp.checked = checkbox.checked;
+  });
+  atualizarBulkBar();
+}
+
+function atualizarBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const count = selecionados.size;
+  document.getElementById('bulkCount').textContent = count;
+  bar.classList.toggle('show', count>0);
+}
+
+function limparSelecao(){
+  selecionados.clear();
+  renderTabelaClientes();
+}
+
+function excluirSelecionados(){
+  if(!selecionados.size) return;
+  if(!confirm(`Excluir ${selecionados.size} cliente(s) selecionado(s)? Esta ação não pode ser desfeita.`)) return;
+
+  // Agrupa índices por segmento e remove do maior índice para o menor (evita desalinhamento)
+  const porSegmento = { imoveis: [], veiculos: [] };
+  selecionados.forEach(chave=>{
+    const [seg, idx] = chave.split('|');
+    porSegmento[seg].push(parseInt(idx,10));
+  });
+  porSegmento.imoveis.sort((a,b)=>b-a).forEach(idx=>clientesImoveis.splice(idx,1));
+  porSegmento.veiculos.sort((a,b)=>b-a).forEach(idx=>clientesVeiculos.splice(idx,1));
+
+  save('clientesImoveis', clientesImoveis);
+  save('clientesVeiculos', clientesVeiculos);
+  const totalRemovidos = selecionados.size;
+  selecionados.clear();
+  renderClientes('imoveis');
+  renderClientes('veiculos');
+  renderTabelaClientes();
+  toast(`${totalRemovidos} cliente(s) removido(s).`);
+}
+
+// ─── ABA CLIENTES — IMPORTAÇÃO DE EXCEL/CSV ──────────────────────────────────
+function toggleImportBox(){
+  const body = document.getElementById('importBoxBody');
+  body.classList.toggle('open');
+  document.getElementById('importBoxToggleLabel').textContent = body.classList.contains('open') ? 'Clique para recolher' : 'Clique para expandir';
+}
+
+const CAMPOS_DESTINO = [
+  {key:'nome', label:'Nome', required:true},
+  {key:'tel', label:'Telefone', required:true},
+  {key:'grupo', label:'Grupo', required:true},
+  {key:'cota', label:'Cota', required:true},
+  {key:'valor', label:'Valor (R$)', required:false},
+  {key:'segmento', label:'Segmento', required:false},
+  {key:'ignorar', label:'(ignorar esta coluna)', required:false},
+];
+
+// Tenta adivinhar a coluna correta com base no nome do cabeçalho
+function adivinharCampo(header){
+  const h = String(header||'').toLowerCase().trim();
+  if(/nome|cliente/.test(h)) return 'nome';
+  if(/tel|fone|whats|celular|contato/.test(h)) return 'tel';
+  if(/grupo/.test(h)) return 'grupo';
+  if(/cota/.test(h)) return 'cota';
+  if(/valor|carta|cr[eé]dito/.test(h)) return 'valor';
+  if(/segmento|tipo|categoria/.test(h)) return 'segmento';
+  return 'ignorar';
+}
+
+let importState = { headers: [], rows: [], fileName: '' };
+
+async function handleExcelUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, {type:'array'});
+    const sheetName = wb.SheetNames[0];
+    const sheet = wb.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
+
+    if(!json.length){
+      toast('A planilha está vazia.', true);
+      return;
+    }
+
+    const headers = json[0].map(h=>String(h).trim());
+    const rows = json.slice(1).filter(r=>r.some(cell=>String(cell).trim()!==''));
+
+    if(!rows.length){
+      toast('Nenhuma linha de dados encontrada na planilha.', true);
+      return;
+    }
+
+    importState = { headers, rows, fileName: file.name };
+    abrirImportModal();
+  } catch(err){
+    console.error(err);
+    toast('Não foi possível ler este arquivo. Verifique se é um .xlsx, .xls ou .csv válido.', true);
+  } finally {
+    event.target.value = '';
+  }
+}
+
+function abrirImportModal(){
+  document.getElementById('importFileInfo').textContent = `Arquivo: ${importState.fileName} — ${importState.rows.length} linha(s) detectada(s).`;
+
+  const mapWrap = document.getElementById('mapeamentoColunas');
+  mapWrap.innerHTML = importState.headers.map((h,i)=>{
+    const sugestao = adivinharCampo(h);
+    const opts = CAMPOS_DESTINO.map(f=>`<option value="${f.key}" ${f.key===sugestao?'selected':''}>${f.label}</option>`).join('');
+    return `
+      <div class="map-row">
+        <label title="${h}">${h || '(coluna '+(i+1)+')'}</label>
+        <select id="mapCol${i}" onchange="atualizarPreviewImportacao()">${opts}</select>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('input[name="segPadrao"]').forEach(r=>r.addEventListener('change', atualizarPreviewImportacao));
+
+  atualizarPreviewImportacao();
+  document.getElementById('importModalOverlay').classList.remove('hidden');
+}
+
+function fecharImportModal(){
+  document.getElementById('importModalOverlay').classList.add('hidden');
+}
+
+function obterMapeamentoAtual(){
+  const mapeamento = {}; // campo -> índice de coluna
+  importState.headers.forEach((h,i)=>{
+    const sel = document.getElementById('mapCol'+i);
+    if(!sel) return;
+    const campo = sel.value;
+    if(campo!=='ignorar' && !(campo in mapeamento)) mapeamento[campo] = i;
+  });
+  return mapeamento;
+}
+
+function processarLinhasImportacao(){
+  const mapeamento = obterMapeamentoAtual();
+  const segPadraoEl = document.querySelector('input[name="segPadrao"]:checked');
+  const segPadrao = segPadraoEl ? segPadraoEl.value : 'imoveis';
+
+  const validas = [];
+  const invalidas = [];
+
+  importState.rows.forEach(row=>{
+    const nome = mapeamento.nome!==undefined ? String(row[mapeamento.nome]||'').trim() : '';
+    const tel = mapeamento.tel!==undefined ? String(row[mapeamento.tel]||'').trim() : '';
+    const grupo = mapeamento.grupo!==undefined ? String(row[mapeamento.grupo]||'').trim() : '';
+    const cota = mapeamento.cota!==undefined ? String(row[mapeamento.cota]||'').trim() : '';
+    const valor = mapeamento.valor!==undefined ? String(row[mapeamento.valor]||'').trim() : '';
+    let segmento = mapeamento.segmento!==undefined ? String(row[mapeamento.segmento]||'').trim().toLowerCase() : '';
+
+    if(/im[oó]ve|imov/.test(segmento)) segmento = 'imoveis';
+    else if(/ve[ií]culo|carro|moto/.test(segmento)) segmento = 'veiculos';
+    else segmento = segPadrao;
+
+    if(!nome || !tel || !grupo || !cota){
+      invalidas.push(row);
+      return;
+    }
+    validas.push({nome, tel, grupo, cota, valor, segmento});
+  });
+
+  return {validas, invalidas};
+}
+
+function atualizarPreviewImportacao(){
+  const {validas, invalidas} = processarLinhasImportacao();
+  document.getElementById('previewCount').textContent = validas.length;
+
+  const previewWrap = document.getElementById('importPreviewWrap');
+  const linhasPreview = validas.slice(0,8).map(c=>`
+    <tr><td>${c.nome}</td><td>${c.tel}</td><td>${c.grupo}</td><td>${c.cota}</td><td>${c.valor||'—'}</td><td>${c.segmento==='imoveis'?'🏠 Imóveis':'🚗 Veículos'}</td></tr>
+  `).join('');
+  previewWrap.innerHTML = `
+    <table class="preview-table">
+      <thead><tr><th>Nome</th><th>Telefone</th><th>Grupo</th><th>Cota</th><th>Valor</th><th>Segmento</th></tr></thead>
+      <tbody>${linhasPreview || '<tr><td colspan="6" style="text-align:center;padding:14px;color:#999;">Nenhuma linha válida com o mapeamento atual.</td></tr>'}</tbody>
+    </table>`;
+
+  const warnEl = document.getElementById('importWarnings');
+  if(invalidas.length){
+    warnEl.style.display='block';
+    warnEl.textContent = `⚠️ ${invalidas.length} linha(s) serão ignoradas por falta de Nome, Telefone, Grupo ou Cota.`;
+  } else {
+    warnEl.style.display='none';
+  }
+}
+
+function confirmarImportacao(){
+  const {validas} = processarLinhasImportacao();
+  if(!validas.length){
+    toast('Nenhuma linha válida para importar. Revise o mapeamento das colunas.', true);
+    return;
+  }
+
+  let countImoveis=0, countVeiculos=0;
+  validas.forEach(c=>{
+    const obj = {nome:c.nome, tel:c.tel, grupo:c.grupo, cota:c.cota, valor:c.valor};
+    if(c.segmento==='veiculos'){ clientesVeiculos.push(obj); countVeiculos++; }
+    else { clientesImoveis.push(obj); countImoveis++; }
+  });
+
+  save('clientesImoveis', clientesImoveis);
+  save('clientesVeiculos', clientesVeiculos);
+  fecharImportModal();
+  renderClientes('imoveis');
+  renderClientes('veiculos');
+  renderTabelaClientes();
+  toast(`${validas.length} cliente(s) importado(s): ${countImoveis} imóveis, ${countVeiculos} veículos.`);
+}
+
+function baixarModeloExcel(){
+  const dados = [
+    ['Nome','Telefone','Grupo','Cota','Valor','Segmento'],
+    ['João da Silva','+55(61) 99999-0000','12173','4288','80.000','Imoveis'],
+    ['Maria Oliveira','+55(41) 98888-1111','1696','1260','56.000','Veiculos'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+  XLSX.writeFile(wb, 'modelo_importacao_clientes.xlsx');
+}
+
+// drag & drop visual — upload de Excel
+(function(){
+  const box = document.getElementById('excelUploadBox');
+  if(!box) return;
+  ['dragenter','dragover'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.remove('dragover'); }));
+  box.addEventListener('drop', e=>{
+    const file = e.dataTransfer.files[0];
+    if(!file) return;
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('excelInput').files = dt.files;
+    handleExcelUpload({target:{files:[file], value:''}});
+  });
+})();
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.getElementById('dataAssembleia').value = dataImoveis;
+document.getElementById('dataAssembleiaVeic').value = dataVeiculos;
+document.getElementById('badgeData').textContent = 'Assembleia: '+formatarData(dataImoveis);
+
+['imoveis','veiculos'].forEach(seg=>{
+  const wrap = document.getElementById('viewToggle'+(seg==='imoveis'?'Imoveis':'Veiculos'));
+  if(!wrap) return;
+  const botoes = wrap.querySelectorAll('.view-toggle-btn');
+  botoes.forEach(b=>b.classList.remove('active'));
+  const targetIdx = viewMode[seg]==='individual' ? 1 : 0;
+  if(botoes[targetIdx]) botoes[targetIdx].classList.add('active');
+});
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) fecharModal(); });
+document.getElementById('importModalOverlay').addEventListener('click', e=>{ if(e.target===e.currentTarget) fecharImportModal(); });
+
+renderGruposList('imoveis');
+renderGruposList('veiculos');
+renderClientes('imoveis');
+renderClientes('veiculos');
+renderTabelaClientes();
+</script>
+</body>
+</html>
