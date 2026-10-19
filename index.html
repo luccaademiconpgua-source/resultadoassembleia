@@ -3,23 +3,28 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Painel Assembleia — Ademicon</title>
+<title>Painel de Assembleias ARVIA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --verde: #1B4332;
-    --verde-mid: #2D6A4F;
-    --verde-light: #D8F3DC;
-    --verde-border: #B7E4C7;
-    --laranja: #E76F1C;
-    --laranja-light: #FEF0E6;
-    --cinza-bg: #F4F6F4;
+    --verde: #4A0D18;
+    --verde-mid: #6B1626;
+    --verde-light: #F3E7E4;
+    --verde-border: #E6D2CC;
+    --laranja: #C6A04A;
+    --laranja-light: #F7EFDC;
+    --cinza-bg: #F5F1E8;
     --cinza-card: #FFFFFF;
-    --cinza-borda: #DDE5DD;
-    --texto: #1A1A1A;
-    --texto-sec: #5C6B5C;
-    --fonte: 'Segoe UI', system-ui, sans-serif;
+    --cinza-borda: #E5DCCB;
+    --texto: #111111;
+    --texto-sec: #6E5F5A;
+    --fonte: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --ouro: #C6A04A; --ouro-claro: #E1C16A; --bordo-abs: #25070D;
     --radius: 10px;
     --radius-sm: 6px;
   }
@@ -42,9 +47,9 @@
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; background: var(--laranja); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
   .logo-text { font-size: 16px; font-weight: 600; letter-spacing: .3px; }
-  .logo-sub { font-size: 11px; color: #A8C4B0; margin-top: 1px; }
+  .logo-sub { font-size: 11px; color: #C6A04A; margin-top: 1px; }
   .header-right { display: flex; align-items: center; gap: 10px; }
-  .assembleia-badge { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #C8E6CC; }
+  .assembleia-badge { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 20px; padding: 4px 14px; font-size: 12px; color: #E1C16A; }
 
   /* MAIN */
   main { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
@@ -98,9 +103,9 @@
   .cota-linha { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--cinza-bg); border-radius: var(--radius-sm); margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; }
   .cota-linha .cota-grupo { font-weight: 600; color: var(--verde); min-width: 95px; }
   .cota-linha .cota-num { color: var(--texto-sec); }
-  .cota-status-ok { color: #1B4332; font-weight: 600; font-size: 12px; }
+  .cota-status-ok { color: #4A0D18; font-weight: 600; font-size: 12px; }
   .cota-status-pendente { color: var(--texto-sec); font-size: 12px; }
-  .multi-cota-tag { background: var(--laranja-light); color: #B85000; font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 600; }
+  .multi-cota-tag { background: var(--laranja-light); color: #8A6A22; font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 600; }
 
   /* STATS */
   .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
@@ -126,7 +131,7 @@
   /* UPLOAD PDF */
   .upload-box {
     border: 2px dashed var(--verde-border); border-radius: var(--radius);
-    padding: 22px; text-align: center; background: #FAFCFA; margin-bottom: 16px;
+    padding: 22px; text-align: center; background: #FBF8F1; margin-bottom: 16px;
     transition: border-color .15s, background .15s; cursor: pointer; position: relative;
   }
   .upload-box:hover, .upload-box.dragover { border-color: var(--verde-mid); background: var(--verde-light); }
@@ -163,7 +168,7 @@
   .client-grid { display: flex; flex-direction: column; gap: 10px; }
   .client-card { background: #fff; border: 1px solid var(--cinza-borda); border-radius: var(--radius); overflow: hidden; }
   .client-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; }
-  .client-header:hover { background: #FAFCFA; }
+  .client-header:hover { background: #FBF8F1; }
   .client-left { display: flex; align-items: center; gap: 12px; }
   .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
   .client-name { font-size: 14px; font-weight: 600; }
@@ -171,9 +176,9 @@
   .client-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .badge { font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 500; }
   .badge-grupo { background: var(--verde-light); color: var(--verde); }
-  .badge-veiculo-tag { background: #FEF0E6; color: #B85000; }
+  .badge-veiculo-tag { background: #F7EFDC; color: #8A6A22; }
   .badge-imovel-tag { background: var(--verde-light); color: var(--verde); }
-  .badge-contemplado { background: #D8F3DC; color: #1B4332; }
+  .badge-contemplado { background: #F3E7E4; color: #4A0D18; }
   .badge-auto { background: #E0F2FE; color: #0C4A6E; }
   .chev { font-size: 18px; color: var(--texto-sec); transition: transform .2s; line-height: 1; }
   .chev.open { transform: rotate(180deg); }
@@ -181,7 +186,7 @@
   .client-body.open { display: block; }
   .info-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
   .info-pill { font-size: 12px; padding: 4px 11px; border-radius: 10px; background: var(--cinza-bg); color: var(--texto-sec); border: 1px solid var(--cinza-borda); }
-  .msg-preview { background: #F7FAF7; border: 1px solid var(--verde-border); border-radius: var(--radius-sm); padding: 13px 15px; font-size: 13px; line-height: 1.85; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; color: var(--texto); font-family: inherit; }
+  .msg-preview { background: #FBF8F1; border: 1px solid var(--verde-border); border-radius: var(--radius-sm); padding: 13px 15px; font-size: 13px; line-height: 1.85; white-space: pre-wrap; word-break: break-word; margin-bottom: 12px; color: var(--texto); font-family: inherit; }
   .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .no-results { text-align: center; color: var(--texto-sec); padding: 2rem 0; font-size: 14px; }
 
@@ -204,7 +209,7 @@
   table.preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.preview-table th { background: var(--verde-light); color: var(--verde); text-align: left; padding: 7px 10px; position: sticky; top: 0; }
   table.preview-table td { padding: 6px 10px; border-top: 1px solid var(--cinza-borda); }
-  table.preview-table tr:nth-child(even) { background: #FAFCFA; }
+  table.preview-table tr:nth-child(even) { background: #FBF8F1; }
 
   @media(max-width: 600px) {
     header { padding: 0 1rem; }
@@ -220,7 +225,7 @@
   }
   .clientes-toolbar input[type="text"]:focus { border-color: var(--verde-mid); }
   .clientes-toolbar select { padding: 9px 12px; border: 1.5px solid var(--cinza-borda); border-radius: var(--radius-sm); font-size: 13px; background:#fff; color: var(--texto); }
-  .bulk-bar { display: none; align-items: center; gap: 10px; background: var(--laranja-light); border: 1px solid #F3C9A0; border-radius: var(--radius-sm); padding: 9px 14px; margin-bottom: 12px; font-size: 13px; color: #7D3B0A; }
+  .bulk-bar { display: none; align-items: center; gap: 10px; background: var(--laranja-light); border: 1px solid #E8D5A6; border-radius: var(--radius-sm); padding: 9px 14px; margin-bottom: 12px; font-size: 13px; color: #7A5A12; }
   .bulk-bar.show { display: flex; }
   .bulk-bar b { font-weight: 700; }
   .clientes-table-wrap { background: #fff; border: 1px solid var(--cinza-borda); border-radius: var(--radius); overflow: hidden; }
@@ -228,7 +233,7 @@
   table.clientes-table th { background: var(--cinza-bg); color: var(--texto-sec); text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid var(--cinza-borda); white-space: nowrap; }
   table.clientes-table td { padding: 9px 12px; border-bottom: 1px solid var(--cinza-borda); vertical-align: middle; }
   table.clientes-table tr:last-child td { border-bottom: none; }
-  table.clientes-table tr:hover td { background: #FAFCFA; }
+  table.clientes-table tr:hover td { background: #FBF8F1; }
   table.clientes-table input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--verde-mid); cursor: pointer; }
   .table-actions { display: flex; gap: 6px; }
   .table-actions button { background: none; border: none; cursor: pointer; font-size: 13px; padding: 4px 7px; border-radius: 5px; color: var(--texto-sec); }
@@ -236,7 +241,7 @@
   .table-actions button.danger:hover { background: #FEE2E2; color: #991B1B; }
   .seg-tag { font-size: 11px; padding: 3px 9px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
   .seg-tag.imoveis { background: var(--verde-light); color: var(--verde); }
-  .seg-tag.veiculos { background: #FEF0E6; color: #B85000; }
+  .seg-tag.veiculos { background: #F7EFDC; color: #8A6A22; }
   .table-pagination { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; color: var(--texto-sec); border-top: 1px solid var(--cinza-borda); }
   .table-pagination .pg-btns { display: flex; gap: 6px; }
   .table-pagination button { padding: 5px 11px; font-size: 12px; border-radius: var(--radius-sm); border: 1.5px solid var(--cinza-borda); background: #fff; cursor: pointer; }
@@ -245,7 +250,7 @@
   /* UPLOAD EXCEL */
   .excel-upload-box {
     border: 2px dashed var(--verde-border); border-radius: var(--radius);
-    padding: 26px; text-align: center; background: #FAFCFA; margin-bottom: 16px;
+    padding: 26px; text-align: center; background: #FBF8F1; margin-bottom: 16px;
     transition: border-color .15s, background .15s; cursor: pointer; position: relative;
   }
   .excel-upload-box:hover, .excel-upload-box.dragover { border-color: var(--verde-mid); background: var(--verde-light); }
@@ -265,16 +270,153 @@
   .radio-row { display: flex; gap: 16px; margin-bottom: 14px; font-size: 13px; }
   .radio-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 500; color: var(--texto); }
   .radio-row input[type="radio"] { width: 15px; height: 15px; accent-color: var(--verde-mid); cursor: pointer; }
+
+  /* ─── RADAR DE SORTEIO ─── */
+  .rd-seg { display:flex; gap:6px; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .rd-seg button { padding:8px 16px; border:1px solid var(--cinza-borda); background:#fff; border-radius:20px; font-size:13px; font-weight:500; cursor:pointer; color:var(--texto-sec); display:flex; gap:6px; align-items:center; }
+  .rd-seg button.active { background:var(--verde); border-color:var(--verde); color:#fff; }
+  .rd-seg .rd-badge { background:var(--laranja); color:#fff; border-radius:10px; font-size:11px; padding:1px 7px; font-weight:600; }
+  .rd-alerts { display:grid; gap:10px; margin-bottom:1.25rem; }
+  .rd-alerts h4 { font-size:13px; color:var(--texto-sec); margin-top:4px; }
+  .rd-alert { border-radius:var(--radius); padding:12px 16px; border:1px solid var(--cinza-borda); background:#fff; }
+  .rd-alert .t { font-weight:600; font-size:14px; margin-bottom:3px; }
+  .rd-alert .d { font-size:13px; color:var(--texto-sec); line-height:1.5; }
+  .rd-alert.win { background:var(--verde-light); border-color:var(--verde-mid); }
+  .rd-alert.win .t { color:var(--verde); }
+  .rd-alert.near { background:#FDECEA; border-color:#F5C6C0; }
+  .rd-alert.near .t { color:#A93226; }
+  .rd-alert.close { background:var(--laranja-light); border-color:#E8D5A6; }
+  .rd-alert.close .t { color:#7A5A12; }
+  .rd-alert.official { background:#EAF2FB; border-color:#C6DCF3; }
+  .rd-alert.official .t { color:#1F4E79; }
+  .rd-draw { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+  .rd-draw label { font-size:11px; color:var(--texto-sec); display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
+  .rd-draw input { width:100%; font-size:22px; font-weight:600; letter-spacing:.06em; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-variant-numeric:tabular-nums; font-family:var(--fonte); }
+  .rd-draw div:first-child input { border-color:var(--laranja); background:var(--laranja-light); }
+  @media (max-width:640px){ .rd-draw{grid-template-columns:repeat(2,minmax(0,1fr));} .rd-draw div:first-child{grid-column:1/-1;} }
+  .rd-imgdrop { border:1.5px dashed var(--verde-border); border-radius:var(--radius); padding:12px 14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; background:#fff; }
+  .rd-imgdrop.over { background:var(--verde-light); }
+  .rd-imgdrop input { display:none; }
+  .rd-imgprev { display:grid; gap:10px; margin-bottom:14px; padding:14px; border-radius:var(--radius); background:var(--cinza-bg); border:1px solid var(--cinza-borda); }
+  .rd-imgprev img { max-width:100%; max-height:220px; border-radius:6px; border:1px solid var(--cinza-borda); justify-self:start; }
+  .rd-chip { display:inline-block; font-size:12px; padding:3px 9px; border-radius:12px; background:#fff; border:1px solid var(--cinza-borda); margin:0 4px 4px 0; font-variant-numeric:tabular-nums; }
+  .rd-ok { color:var(--verde-mid); font-weight:600; font-size:12px; } .rd-bad { color:#C0392B; font-weight:600; font-size:12px; }
+  .rd-flag { font-size:12px; padding:3px 10px; border-radius:12px; display:inline-block; margin-top:10px; }
+  .rd-flag.ok { background:var(--verde-light); color:var(--verde); } .rd-flag.warn { background:var(--laranja-light); color:#7A5A12; }
+  .rd-groups { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+  .rd-group { background:#fff; border:1px solid var(--cinza-borda); border-radius:var(--radius); padding:12px; display:grid; gap:8px; }
+  .rd-group .g-top { display:flex; justify-content:space-between; align-items:baseline; }
+  .rd-group .g-num { font-size:18px; font-weight:700; color:var(--verde); }
+  .rd-group .g-row { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--texto-sec); flex-wrap:wrap; }
+  .rd-group select, .rd-group input { font-size:13px; padding:4px 6px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-family:var(--fonte); }
+  .rd-group input { width:72px; }
+  .rd-est { font-size:10.5px; padding:2px 7px; border-radius:10px; border:0; cursor:pointer; background:var(--laranja-light); color:#7A5A12; font-family:var(--fonte); }
+  .rd-est.ok { background:var(--verde-light); color:var(--verde); }
+  .rd-prizes { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; }
+  .rd-prizes div { text-align:center; border-radius:6px; padding:3px 2px; background:var(--cinza-bg); font-variant-numeric:tabular-nums; }
+  .rd-prizes b { display:block; font-size:15px; }
+  .rd-prizes span { font-size:10px; color:var(--texto-sec); }
+  .rd-prizes div:first-child { background:var(--laranja-light); }
+  .rd-prizes div:first-child b { color:#7A5A12; }
+  .rd-official { font-size:12px; color:#1F4E79; }
+  .rd-table-wrap { overflow-x:auto; background:#fff; border:1px solid var(--cinza-borda); border-radius:var(--radius); }
+  .rd-table { width:100%; border-collapse:collapse; min-width:880px; font-size:13px; font-variant-numeric:tabular-nums; }
+  .rd-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--texto-sec); padding:10px 12px; border-bottom:1px solid var(--cinza-borda); background:var(--cinza-bg); white-space:nowrap; }
+  .rd-table td { padding:10px 12px; border-bottom:1px solid var(--cinza-borda); vertical-align:middle; }
+  .rd-table tr.off td { opacity:.5; }
+  .rd-table tr.hit td { background:var(--verde-light); }
+  .rd-table .nm { font-weight:600; } .rd-table .sub { font-size:11.5px; color:var(--texto-sec); }
+  .rd-dist { font-size:20px; font-weight:700; }
+  .rd-pill { display:inline-block; font-size:11px; padding:3px 9px; border-radius:10px; white-space:nowrap; font-weight:600; }
+  .rd-pill.win { background:var(--verde); color:#fff; } .rd-pill.near { background:#FDECEA; color:#A93226; }
+  .rd-pill.close { background:var(--laranja-light); color:#7A5A12; } .rd-pill.far, .rd-pill.off { background:var(--cinza-bg); color:var(--texto-sec); }
+  .rd-pill.done { background:#EAF2FB; color:#1F4E79; }
+  .rd-table select { font-size:12px; padding:4px 6px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); }
+  .rd-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .rd-filter button { border:1px solid var(--cinza-borda); background:#fff; border-radius:16px; padding:4px 12px; font-size:12px; cursor:pointer; }
+  .rd-filter button.active { background:var(--verde); color:#fff; border-color:var(--verde); }
+  .rd-section-title { font-size:15px; font-weight:600; color:var(--verde); margin:1.5rem 0 .75rem; }
+  .rd-section-title:first-child { margin-top:0; }
+  .rd-msg { white-space:pre-wrap; font-size:13px; background:var(--cinza-bg); border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); padding:10px; margin:6px 0 8px; }
+  .rd-note { font-size:12px; color:var(--texto-sec); margin-top:1rem; line-height:1.5; }
+
+
+  /* ─── IDENTIDADE ARVIA CAPITAL ─── */
+  [hidden] { display: none !important; }
+  body { font-family: var(--fonte); }
+  header { background: linear-gradient(120deg, var(--bordo-abs) 0%, #3A0A14 60%, #4A0D18 100%); border-bottom: 1px solid rgba(198,160,74,.35); height: 68px; }
+  .logo { gap: 12px; }
+  .arvia-mark { width: 30px; height: 30px; border: 1px solid var(--ouro); display: grid; place-items: center; transform: rotate(45deg); flex: none; margin: 0 4px; }
+  .arvia-mark span { transform: rotate(-45deg); font-family: var(--display); font-size: 18px; color: var(--ouro-claro); line-height: 1; }
+  .arvia-word b { display: block; font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: .16em; color: #F5F1E8; line-height: 1; }
+  .arvia-word small { font-size: 9px; letter-spacing: .26em; text-transform: uppercase; color: var(--ouro); }
+  .arvia-sep { width: 1px; height: 30px; background: rgba(198,160,74,.35); }
+  .logo-text { font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: .02em; color: #F5F1E8; }
+  .logo-sub { color: var(--ouro-claro); font-size: 10.5px; letter-spacing: .04em; }
+  .assembleia-badge { border-color: rgba(198,160,74,.45); color: var(--ouro-claro); background: rgba(198,160,74,.08); }
+  @media (max-width: 720px) {
+    header { padding: 0 1rem; }
+    .arvia-sep, .logo-sub { display: none; }
+    .logo-text { font-size: 15px; }
+    .assembleia-badge { font-size: 11px; padding: 3px 10px; }
+  }
+  @media (max-width: 460px) { .arvia-word { display: none; } }
+  .tab-btn.active { color: var(--verde); border-bottom-color: var(--ouro); }
+  .tab-btn .count { font-variant-numeric: tabular-nums; }
+  .btn-primary { background: var(--verde); border-color: var(--verde); color: #F5F1E8; }
+  .btn-primary:hover { background: var(--verde-mid); }
+  .btn-outline:hover { border-color: var(--ouro); }
+  .stat-value { font-family: var(--display); font-size: 32px; font-weight: 600; color: var(--verde); font-variant-numeric: lining-nums tabular-nums; }
+  .stat-card { border-top: 2px solid var(--ouro); }
+  .assembleia-header h3, .modal h3 { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--verde); letter-spacing: .01em; }
+  .rd-section-title { font-family: var(--display); font-size: 21px; font-weight: 600; color: var(--verde); }
+  .rd-dist { font-family: var(--display); font-size: 24px; color: var(--verde); font-variant-numeric: lining-nums tabular-nums; }
+  .rd-group .g-num, .logo-text { font-variant-numeric: lining-nums; }
+  .rd-group .g-num { font-family: var(--display); font-size: 20px; }
+  .rd-seg button.active { background: var(--verde); border-color: var(--verde); color: #F5F1E8; }
+  .rd-seg .rd-badge { background: var(--ouro); color: var(--bordo-abs); }
+  .rd-filter button.active { background: var(--verde); border-color: var(--verde); }
+  /* Possível contemplação em ouro; perto em bordô; próximo em areia */
+  .rd-alert.win { background: #FBF3E0; border-color: var(--ouro); }
+  .rd-alert.win .t { color: #7A5A12; }
+  .rd-alert.near { background: #F3E7E4; border-color: #E0C3BD; }
+  .rd-alert.near .t { color: #6B1626; }
+  .rd-alert.close { background: #F4EEE3; border-color: #E5DCCB; }
+  .rd-alert.close .t { color: #6E5F5A; }
+  .rd-pill.win { background: linear-gradient(135deg, var(--ouro-claro), var(--ouro)); color: var(--bordo-abs); }
+  .rd-pill.near { background: #F3E7E4; color: #6B1626; }
+  .rd-pill.close { background: #F4EEE3; color: #6E5F5A; }
+  .rd-table tr.hit td { background: #FBF3E0; }
+  .rd-draw div:first-child input { border-color: var(--ouro); background: #FBF3E0; }
+  .rd-prizes div:first-child { background: #FBF3E0; }
+  .rd-prizes div:first-child b { color: #7A5A12; }
+  .rd-ok { color: #6B1626; }
+  .rd-imgdrop { border-color: #E8D5A6; }
+  .rd-imgdrop.over { background: #FBF3E0; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ouro) !important; box-shadow: 0 0 0 3px rgba(198,160,74,.18); }
+  :focus-visible { outline: 2px solid var(--ouro); outline-offset: 2px; }
+  .arvia-foot { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.5rem 2.5rem; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: space-between; border-top: 1px solid var(--cinza-borda); color: var(--texto-sec); font-size: 12px; }
+  @media (max-width: 720px) {
+    .tabs { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { white-space: nowrap; padding: 10px 12px; font-size: 13px; flex: none; }
+    .assembleia-header { flex-wrap: wrap; gap: 4px; }
+    #rdLotSummary { width: 100%; }
+    main { padding: 1.25rem 1rem; }
+  }
+  .arvia-foot b { font-family: var(--display); font-size: 16px; letter-spacing: .14em; color: var(--verde); font-weight: 600; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <div class="logo-icon">A</div>
+    <div class="arvia-mark"><span>A</span></div>
+    <div class="arvia-word"><b>ARVIA</b><small>Capital</small></div>
+    <div class="arvia-sep"></div>
     <div>
-      <div class="logo-text">Ademicon — Painel de Assembleias</div>
-      <div class="logo-sub">Mensagens de acompanhamento por cliente</div>
+      <div class="logo-text">Painel de Assembleias</div>
+      <div class="logo-sub">Lucca Antunes · Parceiro autorizado Ademicon</div>
     </div>
   </div>
   <div class="header-right">
@@ -294,6 +436,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('clientes',this)">
       👥 Clientes <span class="count" id="countClientesTab">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('radar',this)">
+      🎯 Radar de Sorteio <span class="count" id="countRadarTab">0</span>
     </button>
   </div>
 
@@ -494,7 +639,64 @@
     </div>
   </div>
 
+<!-- TAB RADAR DE SORTEIO -->
+<div class="tab-panel" id="tab-radar">
+<div class="rd-seg" id="rdSeg"></div>
+
+<div class="rd-section-title">🔔 Alerta de sorteio</div>
+<div class="rd-alerts" id="rdAlerts"></div>
+
+<div class="assembleia-box">
+<div class="assembleia-header" onclick="document.getElementById('rdLotBody').classList.toggle('open')">
+<h3>🎲 Resultado da Loteria Federal (<span id="rdSegName">imóveis</span>)</h3>
+<span style="font-size:12px;color:var(--verde);" id="rdLotSummary">Clique para expandir</span>
+</div>
+<div class="assembleia-body open" id="rdLotBody">
+<div class="rd-imgdrop" id="rdImgDrop" hidden>
+<label class="btn btn-primary btn-sm" for="rdImgFile" tabindex="0">📷 Ler imagem do quadro</label>
+<input id="rdImgFile" type="file" accept="image/png,image/jpeg,image/webp"/>
+<span style="font-size:12px;color:var(--texto-sec);" id="rdImgMsg">Envie, arraste ou cole (Ctrl+V) o print do quadro "Resultado do sorteio" da Ademicon.</span>
+</div>
+<div class="rd-imgprev" id="rdImgPrev" hidden></div>
+<div class="rd-draw" id="rdDraw"></div>
+<span class="rd-flag" id="rdFlag" hidden></span>
+<div class="hint">💡 Digite os 5 prêmios da extração usada na assembleia deste segmento. A cota base de cada grupo sai do 1º prêmio pela regra da Ademicon (centena até 1.000 cotas, milhar acima, subtraindo o tamanho do grupo até caber).</div>
+</div>
+</div>
+
+<div class="rd-section-title">📋 Clientes ranqueados pela distância da cota base</div>
+<div class="rd-filter" id="rdFilter"></div>
+<div class="toolbar">
+<input type="text" id="rdSearch" placeholder="Buscar por nome, grupo ou cota..."/>
+</div>
+<div class="rd-table-wrap">
+<table class="rd-table">
+<thead><tr><th>#</th><th>Cliente</th><th>Grupo / cota</th><th>Distância</th><th>Lado</th><th>Ordem</th><th>Leitura</th><th>Situação</th><th></th></tr></thead>
+<tbody id="rdBody"></tbody>
+</table>
+</div>
+<div class="rd-note">Perto: até 20 números da cota base, para cima ou para baixo. Próximo: de 21 a 30. Distante: acima de 30. "Ordem" é a posição da cota na apuração: primeiro as 5 cotas dos prêmios, depois uma acima, uma abaixo, e assim por diante. Cotas que o PDF da assembleia mostra como contempladas saem do sorteio automaticamente.</div>
+
+<div class="rd-section-title">🤝 Pedido de lance fixo aos gestores</div>
+<div class="assembleia-box" style="padding:1rem 1.25rem;">
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+<select id="rdLSeg" style="padding:8px 10px;border:1px solid var(--cinza-borda);border-radius:var(--radius-sm);font-size:13px;">
+<option value="">Imóveis e veículos</option><option value="imoveis">Só imóveis</option><option value="veiculos">Só veículos</option>
+</select>
+<label style="font-size:13px;display:flex;gap:6px;align-items:center;"><input type="checkbox" id="rdLApt" checked/> Só cotas aptas</label>
+<button class="btn btn-primary btn-sm" id="rdBtnLance">Gerar mensagem para os gestores</button>
+</div>
+<div id="rdLanceOut" style="margin-top:10px;"></div>
+<div class="hint">💡 Entram os clientes com matrícula "Gestores" (no relatório do AVA Pro: matrícula em branco ou 3267). Reimporte o relatório na aba Clientes para preencher a matrícula de quem já estava cadastrado.</div>
+</div>
+
+<div class="rd-section-title">⚙️ Grupos do segmento</div>
+<p style="font-size:12px;color:var(--texto-sec);margin-bottom:10px;">O tamanho do grupo muda toda a conta. "Estimado" foi deduzido pela maior cota da carteira; clique para marcar como confirmado. O % de contempladas é opcional e liga a estimativa de chance por aproximação.</p>
+<div class="rd-groups" id="rdGroups"></div>
+</div>
+
 </main>
+<footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span></footer>
 
 <!-- MODAL IMPORTAÇÃO — MAPEAMENTO DE COLUNAS -->
 <div class="modal-overlay hidden" id="importModalOverlay">
@@ -531,6 +733,13 @@
     <div class="field"><label>Grupo</label><input id="mGrupo" type="text" placeholder="ex: 12173"/></div>
     <div class="field"><label>Cota</label><input id="mCota" type="text" placeholder="ex: 4288"/></div>
     <div class="field"><label>Valor da carta (R$)</label><input id="mValor" type="text" placeholder="ex: 80.000"/></div>
+    <div class="field"><label>Matrícula</label>
+      <select id="mMat">
+        <option value="propria">Minha matrícula (13581)</option>
+        <option value="gestores">Gestores</option>
+        <option value="atendimento">Atendimento (cotas de outro consultor)</option>
+      </select>
+    </div>
     <div class="field"><label>Segmento</label>
       <select id="mTipo">
         <option value="imoveis">Imóveis</option>
@@ -538,7 +747,7 @@
       </select>
     </div>
     <div class="field" style="display:flex;align-items:center;gap:10px;padding:10px 0;">
-      <input type="checkbox" id="mContemplado" style="width:18px;height:18px;accent-color:#1B4332;cursor:pointer;"/>
+      <input type="checkbox" id="mContemplado" style="width:18px;height:18px;accent-color:#4A0D18;cursor:pointer;"/>
       <label for="mContemplado" style="margin-bottom:0;font-size:13px;cursor:pointer;">Forçar como contemplado (substitui a detecção automática)</label>
     </div>
     <div class="modal-btns">
@@ -557,9 +766,9 @@ let editSegmento = null;
 let modalSegmento = 'imoveis';
 
 const COLORS = [
-  {bg:'#D8F3DC',txt:'#1B4332'},{bg:'#FEF0E6',txt:'#7D3B0A'},
-  {bg:'#EDE9FE',txt:'#4C1D95'},{bg:'#E0F2FE',txt:'#0C4A6E'},
-  {bg:'#FEF9C3',txt:'#713F12'},{bg:'#FCE7F3',txt:'#831843'},
+  {bg:'#F3E7E4',txt:'#4A0D18'},{bg:'#F7EFDC',txt:'#7A5A12'},
+  {bg:'#25070D',txt:'#E1C16A'},{bg:'#EDE6DA',txt:'#4A3B36'},
+  {bg:'#E9DCD8',txt:'#6B1626'},{bg:'#FBF3E0',txt:'#8A6A22'},
 ];
 
 if (window.pdfjsLib) {
@@ -633,7 +842,8 @@ function buildMsg(c, segmento){
 function abrirWhatsApp(tel, msg){
   const num = telLimpo(tel);
   const url = `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 // ─── AGRUPAMENTO POR CLIENTE (nome + telefone) ────────────────────────────────
@@ -731,6 +941,7 @@ function switchTab(id, btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
+  if(id==='radar') rdRender(true);
 }
 
 // ─── ASSEMBLEIA CONFIG ────────────────────────────────────────────────────────
@@ -946,6 +1157,7 @@ async function handlePdfUpload(event, seg){
     const totalGrupos = Object.keys(gruposExtraidos).length;
     setUploadStatus(seg, 'success', `✅ PDF importado! ${cotas.length} cotas contempladas em ${totalGrupos} grupos. As mensagens já foram atualizadas automaticamente.`);
     renderPreviewTabela(seg, gruposExtraidos);
+    rdRender(true);
     toast(`PDF importado: ${cotas.length} cotas em ${totalGrupos} grupos.`);
   } catch(err){
     console.error(err);
@@ -1147,7 +1359,7 @@ function renderClientesIndividual(seg){
             Enviar via WhatsApp
           </button>
           <button class="btn btn-outline btn-sm" onclick="copiarMsg('${seg}',${i},this)">Copiar mensagem</button>
-          <button class="btn btn-outline btn-sm" onclick="toggleContemplado('${seg}',${realIdx},this)" ${isContempladoAuto ? 'disabled title="Detectado automaticamente pelo PDF"' : ''} style="${isContempladoManual?'color:#1B4332;border-color:#B7E4C7;':''}">${isContempladoManual?'Remover marcação manual':'Marcar como contemplado (manual)'}</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleContemplado('${seg}',${realIdx},this)" ${isContempladoAuto ? 'disabled title="Detectado automaticamente pelo PDF"' : ''} style="${isContempladoManual?'color:#4A0D18;border-color:#E6D2CC;':''}">${isContempladoManual?'Remover marcação manual':'Marcar como contemplado (manual)'}</button>
           <button class="btn btn-outline btn-sm" onclick="editarCliente('${seg}',${realIdx})">Editar</button>
           <button class="btn btn-outline btn-sm" style="color:#C0392B;border-color:#ECC;" onclick="removerCliente('${seg}',${realIdx})">Remover</button>
         </div>
@@ -1193,6 +1405,7 @@ function abrirModal(seg){
   ['mNome','mTel','mGrupo','mCota','mValor'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mTipo').value = seg;
   document.getElementById('mContemplado').checked = false;
+  document.getElementById('mMat').value = 'propria';
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
@@ -1213,6 +1426,7 @@ function editarCliente(seg, idx){
   document.getElementById('mValor').value = c.valor;
   document.getElementById('mTipo').value = seg;
   document.getElementById('mContemplado').checked = !!c.contemplado;
+  document.getElementById('mMat').value = c.matricula || 'propria';
   document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
@@ -1226,8 +1440,9 @@ function salvarCliente(){
   const valor=document.getElementById('mValor').value.trim();
   const tipo=document.getElementById('mTipo').value;
   const contemplado=document.getElementById('mContemplado').checked;
+  const matricula=document.getElementById('mMat').value;
   if(!nome||!tel||!grupo||!cota) return toast('Preencha nome, telefone, grupo e cota.', true);
-  const obj={nome,tel,grupo,cota,valor,contemplado};
+  const obj={nome,tel,grupo,cota,valor,contemplado,matricula};
   if(editIdx!==null){
     if(editSegmento==='imoveis') clientesImoveis[editIdx]=obj;
     else clientesVeiculos[editIdx]=obj;
@@ -1241,6 +1456,7 @@ function salvarCliente(){
   renderClientes('imoveis');
   renderClientes('veiculos');
   renderTabelaClientes();
+  rdRender(true);
   toast(editIdx!==null?'Cliente atualizado!':'Cliente adicionado!');
 }
 
@@ -1428,12 +1644,14 @@ const CAMPOS_DESTINO = [
   {key:'cota', label:'Cota', required:true},
   {key:'valor', label:'Valor (R$)', required:false},
   {key:'segmento', label:'Segmento', required:false},
+  {key:'matricula', label:'Matrícula', required:false},
   {key:'ignorar', label:'(ignorar esta coluna)', required:false},
 ];
 
 // Tenta adivinhar a coluna correta com base no nome do cabeçalho
 function adivinharCampo(header){
   const h = String(header||'').toLowerCase().trim();
+  if(/matr[ií]cula/.test(h)) return 'matricula';
   if(/nome|cliente/.test(h)) return 'nome';
   if(/tel|fone|whats|celular|contato/.test(h)) return 'tel';
   if(/grupo/.test(h)) return 'grupo';
@@ -1450,7 +1668,7 @@ async function handleExcelUpload(event){
   if(!file) return;
   try {
     const data = await file.arrayBuffer();
-    const wb = XLSX.read(data, {type:'array'});
+    const wb = XLSX.read(data, {type:'array', raw:true});
     const sheetName = wb.SheetNames[0];
     const sheet = wb.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(sheet, {header:1, defval:''});
@@ -1527,6 +1745,9 @@ function processarLinhasImportacao(){
     const grupo = mapeamento.grupo!==undefined ? String(row[mapeamento.grupo]||'').trim() : '';
     const cota = mapeamento.cota!==undefined ? String(row[mapeamento.cota]||'').trim() : '';
     const valor = mapeamento.valor!==undefined ? String(row[mapeamento.valor]||'').trim() : '';
+    const matRaw = mapeamento.matricula!==undefined ? String(row[mapeamento.matricula]??'').trim() : null;
+    // AVA Pro: 13581 = matrícula própria; em branco ou outra (ex.: 3267) = gestores
+    const matricula = matRaw===null ? '' : (matRaw.replace(/\D/g,'')==='13581' || /pr[oó]pria|minha/i.test(matRaw) ? 'propria' : /atend/i.test(matRaw) ? 'atendimento' : 'gestores');
     let segmento = mapeamento.segmento!==undefined ? String(row[mapeamento.segmento]||'').trim().toLowerCase() : '';
 
     if(/im[oó]ve|imov/.test(segmento)) segmento = 'imoveis';
@@ -1537,7 +1758,8 @@ function processarLinhasImportacao(){
       invalidas.push(row);
       return;
     }
-    validas.push({nome, tel, grupo, cota, valor, segmento});
+    const nomeFmt = nome.toLowerCase().replace(/\s+/g,' ').split(' ').map((p,i)=>i>0&&['da','de','do','das','dos','e'].includes(p)?p:p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+    validas.push({nome:nomeFmt, tel, grupo, cota, valor, segmento, matricula});
   });
 
   return {validas, invalidas};
@@ -1573,9 +1795,21 @@ function confirmarImportacao(){
     return;
   }
 
-  let countImoveis=0, countVeiculos=0;
+  let countImoveis=0, countVeiculos=0, countAtualizados=0;
+  const chaveCota = c => String(c.grupo).replace(/\D/g,'')+'/'+normalizarCota(c.cota);
   validas.forEach(c=>{
+    const lista = c.segmento==='veiculos' ? clientesVeiculos : clientesImoveis;
+    const existente = lista.find(x=>chaveCota(x)===chaveCota(c));
+    if(existente){
+      // mantém o nome que você já usa; atualiza telefone, valor e matrícula
+      if(c.tel) existente.tel = c.tel;
+      if(c.valor) existente.valor = c.valor;
+      if(c.matricula) existente.matricula = c.matricula;
+      countAtualizados++;
+      return;
+    }
     const obj = {nome:c.nome, tel:c.tel, grupo:c.grupo, cota:c.cota, valor:c.valor};
+    if(c.matricula) obj.matricula = c.matricula;
     if(c.segmento==='veiculos'){ clientesVeiculos.push(obj); countVeiculos++; }
     else { clientesImoveis.push(obj); countImoveis++; }
   });
@@ -1586,14 +1820,15 @@ function confirmarImportacao(){
   renderClientes('imoveis');
   renderClientes('veiculos');
   renderTabelaClientes();
-  toast(`${validas.length} cliente(s) importado(s): ${countImoveis} imóveis, ${countVeiculos} veículos.`);
+  rdRender(true);
+  toast(`${countImoveis+countVeiculos} cota(s) nova(s) (${countImoveis} imóveis, ${countVeiculos} veículos)` + (countAtualizados ? ` e ${countAtualizados} atualizada(s).` : '.'));
 }
 
 function baixarModeloExcel(){
   const dados = [
-    ['Nome','Telefone','Grupo','Cota','Valor','Segmento'],
-    ['João da Silva','+55(61) 99999-0000','12173','4288','80.000','Imoveis'],
-    ['Maria Oliveira','+55(41) 98888-1111','1696','1260','56.000','Veiculos'],
+    ['Nome','Telefone','Grupo','Cota','Valor','Segmento','Matrícula'],
+    ['João da Silva','+55(61) 99999-0000','12173','4288','80.000','Imoveis','13581'],
+    ['Maria Oliveira','+55(41) 98888-1111','1696','1260','56.000','Veiculos',''],
   ];
   const ws = XLSX.utils.aoa_to_sheet(dados);
   const wb = XLSX.utils.book_new();
@@ -1614,6 +1849,331 @@ function baixarModeloExcel(){
     dt.items.add(file);
     document.getElementById('excelInput').files = dt.files;
     handleExcelUpload({target:{files:[file], value:''}});
+  });
+})();
+
+
+// ─── RADAR DE SORTEIO ────────────────────────────────────────────────────────
+// Regras: Manual dos critérios de contemplação por sorteio (Ademicon) e
+// Contrato de Imóveis, cláusulas 43, 46 e 51.1.
+const RD_SIZES = [500,1000,2000,3333,5000,9999];
+// Tamanhos oficiais conferidos no quadro de resultado de outubro/2026 (1618 informado pelo Lucca)
+const RD_KNOWN = {651:3333,810:3333,1090:3333,1618:1000,1080:5000,12130:5000,12150:5000,12151:5000,12159:5000,12168:5000,12174:5000,12181:5000,12153:9999,12154:9999,12160:9999,12163:9999,12167:9999,12173:9999,12180:9999,12186:9999};
+const RD_KNOWN_PCT = {651:22.7,810:7.5,1618:41};
+const RD_NEAR = 20, RD_CLOSE = 30;
+const RD_SEGS = {imoveis:'Imóveis', veiculos:'Veículos'};
+const RD_STATUS = {apta:'Apta', atraso:'Em atraso', contemplada:'Contemplada'};
+const RD_BANDS = {
+  win:{label:'Possível contemplação', cls:'win'},
+  near:{label:'Perto', cls:'near'},
+  close:{label:'Próximo', cls:'close'},
+  far:{label:'Distante', cls:'far'},
+  off:{label:'Fora do sorteio', cls:'off'},
+  done:{label:'Contemplada na assembleia', cls:'done'}
+};
+let rd = load('radarSorteio', null) || {
+  seg:'imoveis',
+  lots:{imoveis:['46831','31652','60252','78093','09231'], veiculos:['46831','31652','60252','78093','09231']},
+  lotLabel:{imoveis:'Extração 6110 · 18/10/2026', veiculos:''},
+  sizes:{...RD_KNOWN}, confirmed:Object.fromEntries(Object.keys(RD_KNOWN).map(k=>[k,true])),
+  pct:{...RD_KNOWN_PCT}, status:{}, band:''
+};
+function rdSave(){ save('radarSorteio', rd); }
+function rdEsc(t){ return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function rdNum(v){ const n=parseInt(normalizarCota(v),10); return isNaN(n)?null:n; }
+function rdMoney(v){ const s=String(v||'').replace(/[^\d,.]/g,''); if(!s) return 0; return s.includes(',') ? (parseFloat(s.replace(/\./g,'').replace(',','.'))||0) : (parseFloat(s.replace(/\./g,''))||0); }
+function rdFmt(n){ return Number(n).toLocaleString('pt-BR'); }
+function rdPad(n,size){ return String(n).padStart(size>1000?4:3,'0'); }
+function rdClientes(seg){ return seg==='imoveis' ? clientesImoveis : clientesVeiculos; }
+function rdGrupos(seg){ return seg==='imoveis' ? gruposImoveis : gruposVeiculos; }
+function rdMaxCota(seg,g){ return Math.max(0,...rdClientes(seg).filter(c=>String(c.grupo)===String(g)).map(c=>rdNum(c.cota)||0)); }
+function rdSize(seg,g){ return rd.sizes[g] || RD_SIZES.find(s=>s>=rdMaxCota(seg,g)) || 9999; }
+function rdCotaFrom(bilhete,size){
+  const b=parseInt(String(bilhete).replace(/\D/g,''),10); if(isNaN(b)) return null;
+  let n = size<=1000 ? b%1000 : b%10000;
+  while(n>size) n-=size;
+  return n===0 ? size : n;
+}
+function rdPrizes(seg,g){ const s=rdSize(seg,g); return rd.lots[seg].map(b=>b?rdCotaFrom(b,s):null); }
+const rdWrap=(x,size)=>((x-1)%size+size)%size+1;
+function rdOrdem(cota,size,prizes){
+  const list=[]; prizes.forEach(p=>{ if(p!=null && !list.includes(p)) list.push(p); });
+  const i=list.indexOf(cota); if(i>=0) return i+1;
+  const set=new Set(list); let pos=list.length; const base=prizes[0];
+  for(let k=1;k<=size;k++){
+    for(const c of [rdWrap(base+k,size), rdWrap(base-k,size)]){
+      if(set.has(c)) continue; set.add(c); pos++;
+      if(c===cota) return pos;
+    }
+  }
+  return pos;
+}
+function rdAnalyze(cota,size,prizes){
+  const base=prizes[0]; if(base==null||cota==null) return null;
+  const pIdx=prizes.indexOf(cota);
+  const diff=((cota-base)%size+size)%size;
+  let d, side;
+  if(diff===0){ d=0; side='base'; } else if(diff<=size-diff){ d=diff; side='acima'; } else { d=size-diff; side='abaixo'; }
+  const band = pIdx>=0 ? 'win' : d<=RD_NEAR ? 'near' : d<=RD_CLOSE ? 'close' : 'far';
+  return {d, side, pos:rdOrdem(cota,size,prizes), band, pIdx, base};
+}
+function rdRows(seg){
+  const grupos=rdGrupos(seg);
+  return rdClientes(seg).map(c=>{
+    const g=parseInt(String(c.grupo).replace(/\D/g,''),10), cota=rdNum(c.cota);
+    const size=rdSize(seg,g), prizes=rdPrizes(seg,g);
+    const key=seg+'|'+g+'|'+cota;
+    const st=rd.status[key]||'apta';
+    const pdf=statusDaCota(grupos[c.grupo]||grupos[g], {cota:c.cota, contemplado:c.contemplado});
+    const a=rdAnalyze(cota,size,prizes);
+    let band = pdf.contemplada ? 'done' : st!=='apta' ? 'off' : (a ? a.band : 'far');
+    const p=rd.pct[g];
+    const chance=(a && p>0 && p<100 && (band==='win'||band==='near'||band==='close')) ? Math.pow(p/100,a.pos-1)*100 : null;
+    return {c, nome:c.nome, tel:c.tel, g, cota, size, prizes, key, st, a, band, chance, pdf, valor:rdMoney(c.valor), mat:c.matricula||''};
+  });
+}
+function rdChance(c){ return c==null?'':c>=10?Math.round(c)+'%':c>=0.1?c.toFixed(1).replace('.',',')+'%':'menos de 0,1%'; }
+
+function rdAlertText(x){
+  const c=rdPad(x.cota,x.size), b=rdPad(x.a.base,x.size);
+  if(x.band==='win'){
+    if(x.a.pIdx===0) return {t:`${x.nome} · grupo ${x.g}, cota ${c}`, d:'É a cota do 1º prêmio. Se a parcela estiver em dia e a cota não tiver sido contemplada antes, é a contemplada por sorteio deste mês.'};
+    const before=x.prizes.slice(0,x.a.pIdx).map(v=>rdPad(v,x.size)).join(', ');
+    return {t:`${x.nome} · grupo ${x.g}, cota ${c}`, d:`Bateu o ${x.a.pIdx+1}º prêmio. Contempla se ${x.a.pIdx===1?'a cota':'as cotas'} ${before} ${x.a.pIdx===1?'estiver inapta':'estiverem inaptas'} (já contemplada${x.a.pIdx===1?'':'s'} ou em atraso).${x.chance!=null?' Chance estimada: '+rdChance(x.chance)+'.':''}`};
+  }
+  return {t:`${x.nome} · grupo ${x.g}, cota ${c}`, d:`Está ${x.a.d} ${x.a.d===1?'número':'números'} ${x.a.side} da cota base ${b}, ${x.a.pos}ª na ordem de apuração. Só é contemplada por aproximação se as ${x.a.pos-1} cotas à frente estiverem inaptas.${x.chance!=null?' Chance estimada: '+rdChance(x.chance)+'.':' Preencha o % de contempladas do grupo para estimar a chance.'}`};
+}
+function rdRenderSeg(){
+  const box=document.getElementById('rdSeg'); box.innerHTML='';
+  Object.entries(RD_SEGS).forEach(([k,label])=>{
+    const rows=rdRows(k), wins=rows.filter(x=>x.band==='win').length;
+    const b=document.createElement('button');
+    b.className = rd.seg===k ? 'active' : '';
+    b.innerHTML = `${k==='imoveis'?'🏠':'🚗'} ${label} <span style="opacity:.75">${rows.length}</span>${wins?`<span class="rd-badge" title="Possível contemplação">${wins}</span>`:''}`;
+    b.onclick=()=>{ rd.seg=k; rd.band=''; rdOpenMsg=null; rdSave(); rdRender(true); };
+    box.appendChild(b);
+  });
+  document.getElementById('rdSegName').textContent = RD_SEGS[rd.seg].toLowerCase();
+  const total = ['imoveis','veiculos'].reduce((s,k)=>s+rdRows(k).filter(x=>x.band==='win').length,0);
+  const cnt=document.getElementById('countRadarTab'); if(cnt){ cnt.textContent=total||'0'; cnt.style.background=total?'var(--laranja)':''; cnt.style.color=total?'#fff':''; }
+}
+function rdRenderAlerts(){
+  const rows=rdRows(rd.seg);
+  const box=document.getElementById('rdAlerts'); box.innerHTML='';
+  const add=(cls,t,d)=>{ const el=document.createElement('div'); el.className='rd-alert '+cls; el.innerHTML=`<div class="t">${rdEsc(t)}</div><div class="d">${rdEsc(d)}</div>`; box.appendChild(el); };
+  const head=t=>{ const h=document.createElement('h4'); h.textContent=t; box.appendChild(h); };
+  const done=rows.filter(x=>x.band==='done');
+  const wins=rows.filter(x=>x.band==='win').sort((a,b)=>a.a.pIdx-b.a.pIdx);
+  const near=rows.filter(x=>x.band==='near').sort((a,b)=>a.a.pos-b.a.pos);
+  const close=rows.filter(x=>x.band==='close').sort((a,b)=>a.a.pos-b.a.pos);
+  if(done.length){ head('Contempladas no PDF da assembleia'); done.forEach(x=>add('official',`${x.nome} · grupo ${x.g}, cota ${rdPad(x.cota,x.size)}`, x.pdf.tipo?`Contemplada por ${x.pdf.tipo}.`:'Marcada como contemplada.')); }
+  if(wins.length){ head(`${wins.length} possível${wins.length>1?'is':''} contemplação${wins.length>1?'ões':''} por sorteio`); wins.forEach(x=>{const t=rdAlertText(x); add('win',t.t,t.d);}); }
+  if(near.length){ head(`Perto da cota base (até ${RD_NEAR} números)`); near.forEach(x=>{const t=rdAlertText(x); add('near',t.t,t.d);}); }
+  if(close.length){ head(`Próximos (${RD_NEAR+1} a ${RD_CLOSE} números)`); close.forEach(x=>{const t=rdAlertText(x); add('close',t.t,t.d);}); }
+  if(!done.length&&!wins.length&&!near.length&&!close.length){
+    const n=rdClientes(rd.seg).length;
+    add('', n ? 'Nada para avisar neste resultado' : 'Nenhum cliente neste segmento', n ? `Nenhuma cota de ${RD_SEGS[rd.seg].toLowerCase()} bateu um dos 5 prêmios nem ficou a até ${RD_CLOSE} números da cota base.` : 'Cadastre ou importe os clientes na aba Clientes.');
+  }
+}
+function rdRenderDraw(){
+  const box=document.getElementById('rdDraw'); box.innerHTML='';
+  const lot=rd.lots[rd.seg];
+  lot.forEach((v,i)=>{
+    const w=document.createElement('div');
+    w.innerHTML=`<label for="rdP${i}">${i+1}º prêmio</label><input id="rdP${i}" inputmode="numeric" maxlength="6" value="${rdEsc(v)}"/>`;
+    w.querySelector('input').addEventListener('input',e=>{ lot[i]=e.target.value.replace(/\D/g,''); rd.lotLabel[rd.seg]=''; rdSave(); rdRender(false); });
+    box.appendChild(w);
+  });
+}
+function rdRenderFlag(){
+  const f=document.getElementById('rdFlag'), lb=rd.lotLabel[rd.seg];
+  const sum=document.getElementById('rdLotSummary');
+  sum.textContent = rd.lots[rd.seg].filter(Boolean).length===5 ? '1º prêmio '+rd.lots[rd.seg][0] : 'Preencha os 5 prêmios';
+  if(lb){ f.hidden=false; f.className='rd-flag ok'; f.textContent=lb; return; }
+  if(rd.seg==='veiculos' && rd.lots.veiculos.join()===rd.lots.imoveis.join()){ f.hidden=false; f.className='rd-flag warn'; f.textContent='Mesma extração dos imóveis. Confira no quadro de veículos se a assembleia usou outra.'; return; }
+  f.hidden=true;
+}
+function rdGroupList(seg){ return [...new Set(rdClientes(seg).map(c=>parseInt(String(c.grupo).replace(/\D/g,''),10)).filter(n=>!isNaN(n)))].sort((a,b)=>a-b); }
+function rdRenderGroups(){
+  const box=document.getElementById('rdGroups'); box.innerHTML='';
+  const grupos=rdGrupos(rd.seg);
+  const list=rdGroupList(rd.seg);
+  if(!list.length){ box.innerHTML='<p style="font-size:13px;color:#999;">Nenhum grupo com clientes neste segmento.</p>'; return; }
+  list.forEach(g=>{
+    const size=rdSize(rd.seg,g), pr=rdPrizes(rd.seg,g);
+    const n=rdClientes(rd.seg).filter(c=>String(parseInt(String(c.grupo).replace(/\D/g,''),10))===String(g)).length;
+    const gi=grupos[g]||grupos[String(g)];
+    const sorteios = gi && Array.isArray(gi.cotas) ? gi.cotas.filter(c=>/sorteio/i.test(c.tipo)).map(c=>c.cota) : [];
+    const el=document.createElement('div'); el.className='rd-group';
+    el.innerHTML=`<div class="g-top"><span class="g-num">Grupo ${g}</span><span style="font-size:11px;color:var(--texto-sec);">${n} cota${n>1?'s':''}</span></div>
+      <div class="g-row"><label for="rdSz${g}">Participantes</label><select id="rdSz${g}">${RD_SIZES.map(s=>`<option value="${s}" ${s===size?'selected':''}>${rdFmt(s)}</option>`).join('')}</select>
+      <button type="button" class="rd-est ${rd.confirmed[g]?'ok':''}">${rd.confirmed[g]?'confirmado':'estimado'}</button></div>
+      <div class="g-row"><label for="rdPc${g}">% já contempladas</label><input id="rdPc${g}" inputmode="decimal" placeholder="opcional" value="${rd.pct[g]!=null?String(rd.pct[g]).replace('.',','):''}"/></div>
+      <div class="rd-prizes">${pr.map((c,i)=>`<div><b>${c==null?'–':rdPad(c,size)}</b><span>${i+1}º</span></div>`).join('')}</div>
+      ${sorteios.length?`<div class="rd-official">📄 Sorteio no PDF da assembleia: cota ${sorteios.map(rdEsc).join(', ')}</div>`:''}`;
+    el.querySelector('select').addEventListener('change',e=>{ rd.sizes[g]=+e.target.value; rd.confirmed[g]=true; rdSave(); rdRender(true); });
+    el.querySelector('.rd-est').addEventListener('click',()=>{ rd.confirmed[g]=!rd.confirmed[g]; if(rd.confirmed[g]) rd.sizes[g]=size; rdSave(); rdRenderGroups(); });
+    el.querySelector('input').addEventListener('change',e=>{ const v=parseFloat(e.target.value.replace(',','.')); if(isNaN(v)) delete rd.pct[g]; else rd.pct[g]=Math.min(99,Math.max(0,v)); rdSave(); rdRender(true); });
+    box.appendChild(el);
+  });
+}
+function rdMessage(x){
+  const nm=primeiroNome(x.nome), c=rdPad(x.cota,x.size), b=x.a?rdPad(x.a.base,x.size):'';
+  if(x.band==='win') return `${nm}, tudo bem?\n\nSaiu a extração da Loteria Federal que define o sorteio da assembleia do seu grupo ${x.g}, e o número apurado bate com a sua cota ${c}.\n\nA contemplação só se confirma no resultado oficial da Ademicon, que depende da ordem de apuração e de a parcela estar em dia. Já estou acompanhando e te aviso assim que sair.\n\nEnquanto isso, quer que eu te passe a lista de documentos para adiantar a análise de crédito?`;
+  const lado=x.a.side==='acima'?'acima':'abaixo';
+  if(x.band==='near'||x.band==='close') return `${nm}, tudo bem?\n\nAcompanhei a apuração do seu grupo ${x.g}: a cota base deste mês foi a ${b} e a sua (${c}) ficou só ${rdFmt(x.a.d)} ${x.a.d===1?'número':'números'} ${lado} dela.\n\nCada mês recomeça do zero, mas essa proximidade também é o critério de desempate do lance fixo. Se fizer sentido para o seu planejamento, posso simular quanto um lance fixo representaria para você antecipar a carta. Quer que eu monte?`;
+  return `${nm}, tudo bem?\n\nPassando para te atualizar sobre o seu grupo ${x.g}: a cota base da assembleia deste mês foi a ${b}, e a sua é a ${c}. Seguimos acompanhando mês a mês.\n\nSe quiser acelerar a contemplação de forma planejada, posso te mostrar como estão os lances no grupo e qual estratégia faz mais sentido para o seu objetivo. Quer que eu prepare?`;
+}
+let rdOpenMsg=null;
+function rdRenderTable(){
+  const all=rdRows(rd.seg);
+  const counts={}; all.forEach(x=>counts[x.band]=(counts[x.band]||0)+1);
+  const fb=document.getElementById('rdFilter'); fb.innerHTML='';
+  const mk=(k,l,n)=>{ const b=document.createElement('button'); b.className=rd.band===k?'active':''; b.textContent=`${l} (${n})`; b.onclick=()=>{ rd.band=rd.band===k?'':k; rdSave(); rdRenderTable(); }; fb.appendChild(b); };
+  mk('','Todas',all.length);
+  ['win','near','close','far','done','off'].forEach(k=>{ if(counts[k]) mk(k,RD_BANDS[k].label,counts[k]); });
+  const q=(document.getElementById('rdSearch').value||'').toLowerCase().trim();
+  let list=all.filter(x=>(!q||(x.nome+' '+x.g+' '+x.cota).toLowerCase().includes(q))&&(!rd.band||x.band===rd.band));
+  const rank=x=>x.band==='done'||x.band==='off'?1:0;
+  list.sort((a,b)=>rank(a)-rank(b) || (a.a&&b.a ? a.a.pos-b.a.pos || a.a.d-b.a.d : 0));
+  const tb=document.getElementById('rdBody'); tb.innerHTML='';
+  if(!list.length){ tb.innerHTML='<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:var(--texto-sec);">Nenhuma cota com esses filtros.</td></tr>'; return; }
+  list.forEach((x,i)=>{
+    const a=x.a, B=RD_BANDS[x.band];
+    const tr=document.createElement('tr'); if(x.band==='off'||x.band==='done') tr.className='off'; else if(x.band==='win') tr.className='hit';
+    tr.innerHTML=`<td>${i+1}</td>
+      <td><div class="nm">${rdEsc(x.nome)}</div><div class="sub">${x.valor?'R$ '+Math.round(x.valor).toLocaleString('pt-BR'):''}${x.mat?' · '+rdEsc(x.mat==='gestores'?'Gestores':x.mat==='propria'?'Minha matrícula':x.mat):''}</div></td>
+      <td>${x.g} / ${x.cota!=null?rdPad(x.cota,x.size):'–'}<div class="sub">base ${a?rdPad(a.base,x.size):'–'} · ${rdFmt(x.size)} cotas</div></td>
+      <td><span class="rd-dist">${a?rdFmt(a.d):'–'}</span></td>
+      <td>${!a?'–':a.side==='base'?'na base':a.side}</td>
+      <td>${!a?'–':a.pIdx>=0?(a.pIdx+1)+'º prêmio':rdFmt(a.pos)+'ª'}${x.chance!=null?`<div class="sub">chance ${rdChance(x.chance)}</div>`:''}</td>
+      <td><span class="rd-pill ${B.cls}">${B.label}${x.band==='done'&&x.pdf.tipo?' ('+rdEsc(x.pdf.tipo)+')':''}</span></td>
+      <td><select>${Object.entries(RD_STATUS).map(([k,v])=>`<option value="${k}" ${k===x.st?'selected':''}>${v}</option>`).join('')}</select></td>
+      <td><button class="btn btn-outline btn-sm">Mensagem</button></td>`;
+    tr.querySelector('select').addEventListener('change',e=>{ rd.status[x.key]=e.target.value; rdSave(); rdRender(false); });
+    tr.querySelector('button').addEventListener('click',()=>{ rdOpenMsg = rdOpenMsg===x.key?null:x.key; rdRenderTable(); });
+    tb.appendChild(tr);
+    if(rdOpenMsg===x.key && a){
+      const txt=rdMessage(x);
+      const mr=document.createElement('tr');
+      mr.innerHTML=`<td></td><td colspan="8"><div class="rd-msg">${rdEsc(txt)}</div><div class="action-row">${x.tel?`<button class="btn btn-whatsapp btn-sm" data-act="wa">Enviar via WhatsApp</button>`:''}<button class="btn btn-outline btn-sm" data-act="cp">Copiar mensagem</button></div></td>`;
+      mr.querySelector('[data-act="cp"]').onclick=()=>rdCopy(txt,mr.querySelector('.rd-msg'));
+      const wa=mr.querySelector('[data-act="wa"]'); if(wa) wa.onclick=()=>abrirWhatsApp(x.tel,txt);
+      tb.appendChild(mr);
+    }
+  });
+}
+function rdCopy(txt, el){
+  try{ navigator.clipboard.writeText(txt).then(()=>toast('Mensagem copiada!'), ()=>rdSelect(el)); }catch(e){ rdSelect(el); }
+}
+function rdSelect(el){ if(!el) return; const r=document.createRange(); r.selectNodeContents(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r); toast('Texto selecionado: copie com Ctrl+C'); }
+function rdRender(withDraw){
+  if(!document.getElementById('tab-radar')) return;
+  rdRenderSeg(); if(withDraw!==false) rdRenderDraw(); rdRenderFlag(); rdRenderAlerts(); rdRenderTable(); rdRenderGroups();
+}
+document.getElementById('rdSearch').addEventListener('input', rdRenderTable);
+
+// Pedido de lance fixo aos gestores
+document.getElementById('rdBtnLance').addEventListener('click',()=>{
+  const segF=document.getElementById('rdLSeg').value, apt=document.getElementById('rdLApt').checked;
+  const blocos=[]; let n=0;
+  ['imoveis','veiculos'].forEach(seg=>{
+    if(segF && segF!==seg) return;
+    const rows=rdRows(seg).filter(x=>x.mat==='gestores' && (!apt || (x.band!=='off' && x.band!=='done'))).sort((a,b)=>a.g-b.g||a.cota-b.cota);
+    if(!rows.length) return;
+    n+=rows.length;
+    blocos.push(RD_SEGS[seg]+':\n'+rows.map((x,i)=>`${i+1}. ${x.nome} · grupo ${x.g} · cota ${rdPad(x.cota,x.size)}`).join('\n'));
+  });
+  const out=document.getElementById('rdLanceOut');
+  if(!n){ out.innerHTML='<p style="font-size:13px;color:var(--texto-sec);">Nenhuma cota com matrícula "Gestores" com esses filtros. Reimporte o relatório de vendas do AVA Pro na aba Clientes para trazer a matrícula.</p>'; return; }
+  const txt=`Oi, tudo bem? Podem, por gentileza, ofertar o lance fixo na assembleia deste mês para os clientes abaixo, que estão na matrícula de vocês?\n\n${blocos.join('\n\n')}\n\nSe alguma cota tiver impedimento (parcela em aberto ou grupo sem lance fixo disponível), me avisem que eu falo com o cliente. Obrigado!`;
+  out.innerHTML=`<p style="font-size:12px;color:var(--texto-sec);">${n} cota${n>1?'s':''} na mensagem</p><div class="rd-msg" id="rdLanceTxt">${rdEsc(txt)}</div><button class="btn btn-primary btn-sm" id="rdCopyLance">Copiar mensagem</button>`;
+  document.getElementById('rdCopyLance').onclick=()=>rdCopy(txt, document.getElementById('rdLanceTxt'));
+});
+
+// Leitura do quadro por imagem (só funciona quando a página roda dentro do Claude)
+let rdSample=null, rdCtl=null, rdPend=null;
+(async()=>{
+  try{
+    if(!window.claude || !window.claude.use) return;
+    const sm=await window.claude.use('sample'); if(!sm) return;
+    const lim=await sm.limits().catch(()=>null); if(!lim || !lim.images) return;
+    rdSample=sm; document.getElementById('rdImgDrop').hidden=false;
+  }catch(e){}
+})();
+const RD_IMG_PROMPT=`A imagem é o quadro "Resultado do sorteio" de uma administradora de consórcio (Ademicon), baseado na Loteria Federal.
+Extraia os dados e responda só com um objeto JSON neste formato:
+{"extracao":"6110-7","data":"18/10/2026","mes":"outubro/2026","premios":["46831","31652","60252","78093","09231"],
+ "colunas":[{"tamanho":1000,"valores":["0831","0652","0252","0093","0231"]}],
+ "faixas":[{"tamanho":1000,"grupos":[[370,370],[430,510]]}],
+ "bens_moveis":{"tamanho":500,"valores":["331","152","252","093","231"]}}
+Regras:
+- "premios": os 5 números da coluna da extração da Loteria Federal (1º ao 5º), com 5 dígitos cada, zeros à esquerda mantidos.
+- "colunas": para cada coluna de grupo, o tamanho entre parênteses no cabeçalho (ex.: GRUPO - 3 (3333) vira 3333) e os 5 valores dessa coluna, como aparecem.
+- "faixas": para cada coluna, todos os números de grupo listados. "651 ATÉ 700" vira [651,700]; um número sozinho como 420 vira [420,420]; números separados por "/" são itens separados. Ignore rótulos como SERVIÇOS ou IMÓVEIS, mas inclua os grupos listados abaixo deles.
+- "bens_moveis": a linha de rodapé de bens móveis, se existir; senão null.
+- Se a imagem não for um quadro desse tipo, responda {"erro":"motivo curto"}.`;
+function rdD5(v){ const d=String(v??'').replace(/\D/g,''); return d ? d.padStart(5,'0').slice(-5) : ''; }
+async function rdReadImage(file){
+  if(!file || !rdSample) return;
+  if(!/^image\//.test(file.type)){ document.getElementById('rdImgMsg').textContent='Esse arquivo não é imagem. Use PNG, JPG ou WebP.'; return; }
+  rdCtl?.abort(); rdCtl=new AbortController();
+  const url=URL.createObjectURL(file), box=document.getElementById('rdImgPrev'); box.hidden=false;
+  const seg=rd.seg;
+  box.innerHTML=`<img src="${url}" alt="Quadro enviado"/><div style="display:flex;gap:10px;align-items:center;"><span style="font-size:13px;color:var(--texto-sec);">Lendo o quadro... leva alguns segundos.</span><button class="btn btn-outline btn-sm" id="rdImgStop">Parar</button></div>`;
+  document.getElementById('rdImgStop').onclick=()=>rdCtl.abort();
+  const fail=m=>{ box.innerHTML=`<img src="${url}" alt="Quadro enviado"/><p style="font-size:13px;color:var(--texto-sec);">${m}</p>`; };
+  try{
+    const r=await rdSample.json(RD_IMG_PROMPT,{images:[file], signal:rdCtl.signal});
+    if(!r || r.erro || !Array.isArray(r.premios)) return fail(`Não reconheci um quadro de resultado nessa imagem${r&&r.erro?' ('+rdEsc(r.erro)+')':''}. Tente um print mais nítido, ou digite os prêmios.`);
+    const prem=r.premios.slice(0,5).map(rdD5);
+    if(prem.length<5 || prem.some(p=>p.length!==5)) return fail('Consegui ler só parte dos prêmios. Confira a imagem ou digite os 5 prêmios.');
+    const checks=[];
+    const cmp=(size,vals,label)=>{ const mine=prem.map(b=>rdCotaFrom(b,size)); const theirs=vals.map(v=>parseInt(String(v).replace(/\D/g,''),10)); checks.push({label, ok:mine.every((m,i)=>m===theirs[i]||(theirs[i]===0&&m===size))}); };
+    (r.colunas||[]).forEach(c=>{ const s=+c.tamanho; if(RD_SIZES.includes(s) && Array.isArray(c.valores)) cmp(s,c.valores,rdFmt(s)+' cotas'); });
+    if(r.bens_moveis && Array.isArray(r.bens_moveis.valores)) cmp(+r.bens_moveis.tamanho||500, r.bens_moveis.valores, 'bens móveis');
+    const found={};
+    rdGroupList(seg).forEach(g=>{
+      let best=null;
+      (r.faixas||[]).forEach(f=>{ const s=+f.tamanho; if(!RD_SIZES.includes(s)) return; (f.grupos||[]).forEach(rg=>{ const lo=+rg[0], hi=+(rg[1]??rg[0]); if(isNaN(lo)||isNaN(hi)||g<lo||g>hi) return; if(!best||hi-lo<best.span) best={size:s, span:hi-lo}; }); });
+      if(best && rdMaxCota(seg,g)<=best.size) found[g]=best.size;
+    });
+    const changes=Object.entries(found).filter(([g,s])=>rdSize(seg,+g)!==s || !rd.confirmed[g]);
+    rdPend={seg, prem, found, label:[r.extracao&&'Extração '+r.extracao, r.data].filter(Boolean).join(' · ')};
+    const allOk=checks.length && checks.every(c=>c.ok);
+    box.innerHTML=`<img src="${url}" alt="Quadro enviado"/>
+      <div><b>${rdEsc(rdPend.label||'Quadro lido')}</b> ${r.mes?`<span style="font-size:12px;color:var(--texto-sec);">${rdEsc(r.mes)}</span>`:''}</div>
+      <div>${prem.map((p,i)=>`<span class="rd-chip">${i+1}º ${p}</span>`).join('')}</div>
+      ${checks.length?`<div>${checks.map(c=>`<span class="${c.ok?'rd-ok':'rd-bad'}" style="margin-right:10px;">${c.ok?'✓':'✗'} ${c.label}</span>`).join('')}</div><p style="font-size:12px;color:var(--texto-sec);">${allOk?'A conta da ferramenta bate com todas as colunas do quadro.':'Alguma coluna não bateu. Confira se os prêmios foram lidos certo antes de aplicar.'}</p>`:''}
+      ${changes.length?`<p style="font-size:12px;color:var(--texto-sec);">Tamanho de grupo encontrado no quadro: ${changes.map(([g,s])=>g+' = '+rdFmt(s)).join(', ')}.</p>`:''}
+      <div style="display:flex;gap:8px;"><button class="btn btn-primary btn-sm" id="rdImgApply">Aplicar em ${RD_SEGS[seg].toLowerCase()}</button><button class="btn btn-outline btn-sm" id="rdImgCancel">Descartar</button></div>`;
+    document.getElementById('rdImgCancel').onclick=()=>{ rdPend=null; box.hidden=true; box.innerHTML=''; };
+    document.getElementById('rdImgApply').onclick=()=>{
+      rd.lots[rdPend.seg]=rdPend.prem.slice();
+      Object.entries(rdPend.found).forEach(([g,s])=>{ rd.sizes[g]=s; rd.confirmed[g]=true; });
+      rd.lotLabel[rdPend.seg]=(rdPend.label||'Quadro')+' · lido da imagem';
+      rd.seg=rdPend.seg; rdPend=null; box.hidden=true; box.innerHTML=''; rdSave(); rdRender(true);
+      const wins=rdRows(rd.seg).filter(x=>x.band==='win').length;
+      toast(wins ? `Atenção: ${wins} possível${wins>1?'is':''} contemplação${wins>1?'ões':''} por sorteio. Veja o alerta.` : 'Resultado aplicado!');
+      document.getElementById('rdAlerts').scrollIntoView({behavior:'smooth', block:'start'});
+    };
+  }catch(e){
+    const msg={cancelled:'Leitura cancelada.', not_granted:'Sem autorização para usar o Claude nesta página. Digite os prêmios.', rate_limited:'Muitas leituras seguidas. Espere um pouco e tente de novo.', image_rejected:'Não consegui abrir essa imagem. Tente outro print (PNG ou JPG).', invalid_json:'Não consegui organizar o que li na imagem. Tente de novo ou digite os prêmios.', session_expired:'Sua sessão expirou. Entre de novo no Claude.'}[e&&e.code] || 'Não consegui ler a imagem agora. Tente de novo ou digite os prêmios.';
+    fail(msg);
+    if(e && ['not_granted','sampling_disabled','images_unavailable'].includes(e.code)) document.getElementById('rdImgDrop').hidden=true;
+  }
+}
+(function(){
+  const drop=document.getElementById('rdImgDrop');
+  document.getElementById('rdImgFile').addEventListener('change',e=>{ rdReadImage(e.target.files[0]); e.target.value=''; });
+  drop.querySelector('label').addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); document.getElementById('rdImgFile').click(); } });
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop',e=>rdReadImage(e.dataTransfer.files[0]));
+  document.addEventListener('paste',e=>{
+    if(!rdSample || !document.getElementById('tab-radar').classList.contains('active')) return;
+    const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+    if(it){ e.preventDefault(); rdReadImage(it.getAsFile()); }
   });
 })();
 
@@ -1638,6 +2198,7 @@ renderGruposList('veiculos');
 renderClientes('imoveis');
 renderClientes('veiculos');
 renderTabelaClientes();
+rdRender(true);
 </script>
 </body>
 </html>
