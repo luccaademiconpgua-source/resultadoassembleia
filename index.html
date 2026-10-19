@@ -414,6 +414,20 @@
   }
   .arvia-foot b { font-family: var(--display); font-size: 16px; letter-spacing: .14em; color: var(--verde); font-weight: 600; }
 
+
+  /* ─── REDEFINIR DADOS ─── */
+  .reset-box { margin-top: 2rem; background: #fff; border: 1px solid var(--cinza-borda); border-left: 3px solid #A93226; border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 12px; }
+  .reset-box h3 { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--verde); margin-bottom: 4px; }
+  .reset-box p { font-size: 13px; color: var(--texto-sec); line-height: 1.55; max-width: 72ch; }
+  .reset-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .reset-confirm { background: #FDECEA; border-radius: var(--radius-sm); padding: 12px 14px; display: grid; gap: 10px; }
+  .reset-confirm p { color: #6B1626; }
+  .btn-danger { background: #A93226; border-color: #A93226; color: #fff; }
+  .btn-danger:hover { background: #8E2A20; }
+  @media (max-width: 720px) {
+    .reset-actions { display: grid; grid-template-columns: 1fr; }
+    .reset-actions .btn { width: 100%; justify-content: center; }
+  }
   /* ─── CELULAR / IPHONE ─── */
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { -webkit-tap-highlight-color: rgba(198,160,74,.18); overscroll-behavior-y: none; }
@@ -786,6 +800,24 @@
         <tbody id="tabelaClientesBody"></tbody>
       </table>
       <div class="table-pagination" id="paginacaoClientes"></div>
+    </div>
+
+    <div class="reset-box">
+      <div class="reset-text">
+        <h3>🧹 Redefinir dados</h3>
+        <p>Os clientes ficam salvos só neste aparelho e neste navegador: quem abre o link em outro celular vê a ferramenta vazia. Use isto antes de emprestar este aparelho ou para começar do zero.</p>
+      </div>
+      <div class="reset-actions" id="resetActions">
+        <button class="btn btn-outline" type="button" onclick="baixarBackupClientes()">⬇️ Baixar backup dos clientes (Excel)</button>
+        <button class="btn btn-danger" type="button" onclick="pedirRedefinicao()">Apagar todos os dados</button>
+      </div>
+      <div class="reset-confirm" id="resetConfirm" hidden>
+        <p><b>Apagar tudo deste aparelho?</b> Saem os clientes, os resultados de assembleia, a data, o resultado da Loteria e as configurações do Radar. Não dá para desfazer, a não ser reimportando um backup.</p>
+        <div class="reset-actions">
+          <button class="btn btn-outline" type="button" onclick="cancelarRedefinicao()">Cancelar</button>
+          <button class="btn btn-danger" type="button" onclick="redefinirTudo()">Sim, apagar tudo</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2237,6 +2269,42 @@ document.getElementById('rdBtnLance').addEventListener('click',()=>{
 });
 
 
+
+
+// ─── BACKUP E REDEFINIÇÃO ────────────────────────────────────────────────────
+const CHAVES_DADOS = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio'];
+const MAT_ROTULO = {propria:'13581', gestores:'Gestores', atendimento:'Atendimento'};
+function baixarBackupClientes(){
+  const linhas = [['Nome','Telefone','Grupo','Cota','Valor','Segmento','Matrícula']];
+  clientesImoveis.forEach(c=>linhas.push([c.nome,c.tel,c.grupo,c.cota,c.valor||'','Imoveis',MAT_ROTULO[c.matricula]||'']));
+  clientesVeiculos.forEach(c=>linhas.push([c.nome,c.tel,c.grupo,c.cota,c.valor||'','Veiculos',MAT_ROTULO[c.matricula]||'']));
+  if(linhas.length===1) return toast('Não há clientes para salvar.', true);
+  try{
+    const ws = XLSX.utils.aoa_to_sheet(linhas);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+    const d = new Date(), dt = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb, `backup_clientes_${dt}.xlsx`);
+    toast(`Backup com ${linhas.length-1} cota(s) baixado.`);
+  }catch(e){
+    console.error(e);
+    toast('Não consegui gerar o arquivo neste navegador. Abra pelo site do GitHub para baixar o backup.', true);
+  }
+}
+function pedirRedefinicao(){
+  document.getElementById('resetActions').hidden = true;
+  document.getElementById('resetConfirm').hidden = false;
+  document.getElementById('resetConfirm').scrollIntoView({behavior:'smooth', block:'center'});
+}
+function cancelarRedefinicao(){
+  document.getElementById('resetConfirm').hidden = true;
+  document.getElementById('resetActions').hidden = false;
+}
+function redefinirTudo(){
+  CHAVES_DADOS.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+  toast('Dados apagados. Recarregando...');
+  setTimeout(()=>{ location.reload(); }, 700);
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('dataAssembleia').value = dataImoveis;
