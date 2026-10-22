@@ -569,6 +569,30 @@
     .stat-value { font-size: 24px; }
     .tab-btn { font-size: 12.5px; padding: 10px 10px; }
   }
+  /* ─── ABA PARCELAS EM DIA ─── */
+  .pd-grid { display:grid; gap:12px; }
+  .pd-card { background:#fff; border:1px solid var(--cinza-borda); border-left:4px solid var(--laranja); border-radius:var(--radius); padding:14px 16px; display:grid; gap:10px; min-width:0; }
+  .pd-card.s2 { border-left-color:#C77B2E; }
+  .pd-card.s3 { border-left-color:#A93226; }
+  .pd-card.sent { opacity:.6; border-left-color:var(--verde-mid); }
+  .pd-head { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; align-items:baseline; }
+  .pd-nome { font-family:var(--display); font-size:21px; font-weight:600; color:var(--verde); margin:0; line-height:1.15; }
+  .pd-meta { font-size:12px; color:var(--texto-sec); display:flex; gap:10px; flex-wrap:wrap; font-variant-numeric:tabular-nums; }
+  .pd-tags { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .pd-trig { background:var(--laranja-light); color:#7A5A12; }
+  .pd-step { display:inline-flex; align-items:center; border:1px solid var(--cinza-borda); border-radius:12px; overflow:hidden; background:#fff; }
+  .pd-step button { border:0; background:transparent; padding:2px 10px; cursor:pointer; font-size:14px; color:var(--verde); }
+  .pd-step span { font-size:12px; font-weight:600; padding:0 4px; color:var(--texto); }
+  .pd-msg { width:100%; min-height:230px; font:13.5px/1.55 var(--fonte); color:var(--texto); background:var(--cinza-bg); border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); padding:10px; resize:vertical; }
+  .pd-acts { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .pd-acts .sp { flex:1; }
+  .pd-tel { display:flex; gap:8px; flex-wrap:wrap; }
+  .pd-tel input { flex:1; min-width:180px; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; }
+  .pd-cfg { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-top:4px; }
+  .pd-cfg label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
+  .pd-cfg input[type=date] { width:100%; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-family:var(--fonte); font-size:13px; background:#fff; color:var(--texto); }
+  .pd-warn { font-size:12.5px; color:#7A5A12; background:var(--laranja-light); border-radius:var(--radius-sm); padding:8px 12px; margin-top:10px; }
+  .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
 </style>
 </head>
 <body>
@@ -603,6 +627,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('radar',this)">
       🎯 Radar de Sorteio <span class="count" id="countRadarTab">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('parcelas',this)">
+      📑 Parcelas em Dia <span class="count" id="countParcelasTab">0</span>
     </button>
   </div>
 
@@ -871,6 +898,44 @@
 <div class="rd-groups" id="rdGroups"></div>
 </div>
 
+<!-- TAB PARCELAS EM DIA -->
+<div class="tab-panel" id="tab-parcelas">
+  <div class="assembleia-box">
+    <div class="assembleia-header" onclick="document.getElementById('pdBody').classList.toggle('open')">
+      <h3>📑 Relatório de Cobrança do mês</h3>
+      <span style="font-size:12px;color:var(--verde);" id="pdSummary">Clique para expandir</span>
+    </div>
+    <div class="assembleia-body open" id="pdBody">
+      <div class="upload-box" id="pdUploadBox">
+        <input type="file" id="pdFile" accept=".xlsx,.xls,.csv"/>
+        <div class="upload-icon">📑</div>
+        <div class="upload-title">Clique ou arraste o Relatório de Cobrança do AVA Pro</div>
+        <div class="upload-sub">As cotas em aberto são cruzadas com os clientes da aba Clientes</div>
+      </div>
+      <div class="pd-cfg">
+        <div><label for="pdVenc">Próximo vencimento</label><input type="date" id="pdVenc"/></div>
+        <div><label for="pdAss">Próxima assembleia</label><input type="date" id="pdAss"/></div>
+      </div>
+      <label style="font-size:13px;display:flex;gap:8px;align-items:center;margin-top:12px;"><input type="checkbox" id="pdIa"/> Avisar que a mensagem foi enviada com apoio de I.A.</label>
+      <div id="pdWarn"></div>
+      <div class="hint">💡 Use depois do vencimento. 1 parcela: avisa que a cota ficou fora desta assembleia e antecipa o próximo mês. 2 parcelas: o cliente escolhe entre os dois boletos ou só o mais recente com a anterior diluída. 3 ou mais e sujeita a cancelamento: oferece direto o boleto mais recente com as anteriores diluídas.</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" id="pdReset">Limpar lista do mês</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row" id="pdStats"></div>
+
+  <div class="rd-filter" id="pdFiltroTipo">
+    <button data-v="all" class="active">Todos</button><button data-v="imoveis">🏠 Imóveis</button><button data-v="veiculos">🚗 Veículos</button>
+  </div>
+  <div class="rd-filter" id="pdFiltroStatus">
+    <button data-v="pend" class="active">A enviar</button><button data-v="sent">Enviadas</button><button data-v="all">Todas</button>
+  </div>
+  <div class="pd-grid" id="pdLista"></div>
+</div>
+
 </main>
 <footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span></footer>
 
@@ -1118,6 +1183,7 @@ function switchTab(id, btn){
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
   if(id==='radar') rdRender(true);
+  if(id==='parcelas') pdRender();
   try{ btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); }catch(e){}
 }
 
@@ -2272,7 +2338,7 @@ document.getElementById('rdBtnLance').addEventListener('click',()=>{
 
 
 // ─── BACKUP E REDEFINIÇÃO ────────────────────────────────────────────────────
-const CHAVES_DADOS = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio'];
+const CHAVES_DADOS = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia'];
 const MAT_ROTULO = {propria:'13581', gestores:'Gestores', atendimento:'Atendimento'};
 function baixarBackupClientes(){
   const linhas = [['Nome','Telefone','Grupo','Cota','Valor','Segmento','Matrícula']];
@@ -2306,6 +2372,319 @@ function redefinirTudo(){
   setTimeout(()=>{ location.reload(); }, 700);
 }
 
+// ─── ABA PARCELAS EM DIA ─────────────────────────────────────────────────────
+let pd = load('parcelasEmDia', {open:[], sent:{}, ver:{}, edit:{}, atr:{}, tel:{}, cfg:{venc:'', ass:'', ia:false}, ft:'all', fs:'pend'});
+pd.cfg = Object.assign({venc:'', ass:'', ia:false}, pd.cfg||{});
+['sent','ver','edit','atr','tel'].forEach(k=>{ if(!pd[k]) pd[k]={}; });
+function pdSave(){ save('parcelasEmDia', pd); }
+const pdDig = s => String(s??'').replace(/\D/g,'');
+const pdNorm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+const pdTitle = s => String(s||'').toLowerCase().replace(/(^|\s)\S/g, m=>m.toUpperCase());
+function pdWa(t){ let d=pdDig(t); if(d.length===10||d.length===11) d='55'+d; return d; }
+function pdFmtTel(t){ const d=pdDig(t).replace(/^55(?=\d{10,11}$)/,''); if(d.length===11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; if(d.length===10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`; return t||''; }
+function pdDM(iso){ if(!iso) return ''; const p=iso.split('-'); return `${p[2]}/${p[1]}`; }
+
+function pdLerRelatorio(rows){
+  let hi=-1, map={};
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const m={};
+    rows[i].forEach((c,j)=>{ const n=pdNorm(c);
+      if(m.grupo===undefined && n==='grupo') m.grupo=j;
+      else if(m.cota===undefined && n==='cota') m.cota=j;
+      else if(m.nome===undefined && /^nome|^cliente|consorciad/.test(n)) m.nome=j;
+      else if(m.sit===undefined && /situacao cobranca|cobranca|atras/.test(n)) m.sit=j;
+      else if(m.ent===undefined && /entrega/.test(n)) m.ent=j;
+      else if(m.gc===undefined && /grupo.*cota/.test(n)) m.gc=j;
+    });
+    if((m.grupo!==undefined && m.cota!==undefined) || m.gc!==undefined){ hi=i; map=m; break; }
+  }
+  if(hi<0) return null;
+  const out=[];
+  rows.slice(hi+1).forEach(r=>{
+    let grupo='', cota='';
+    if(map.grupo!==undefined){ grupo=normalizarCota(pdDig(r[map.grupo])); cota=normalizarCota(pdDig(r[map.cota])); }
+    else { const m=String(r[map.gc]||'').match(/(\d{3,6})\s*[\/\-]\s*(\d{1,4})/); if(m){ grupo=normalizarCota(m[1]); cota=normalizarCota(m[2]); } }
+    if(!grupo || !cota) return;
+    const sit = String(map.sit!==undefined ? r[map.sit] : '').toUpperCase();
+    if(/EM DIA|ADIMPL|QUITAD/.test(sit)) return;
+    let atraso=1, cancel=false, cont=false;
+    const m = sit.match(/(\d+)\s*AT/); if(m) atraso=+m[1];
+    if(/SUJ|CANCEL/.test(sit)){ cancel=true; atraso=Math.max(atraso,3); }
+    if(/^CONT/.test(sit.trim())) cont=true;
+    if(map.ent!==undefined && /^contemplad/i.test(String(r[map.ent]).trim())) cont=true;
+    out.push({grupo, cota, nome: map.nome!==undefined ? String(r[map.nome]||'').trim() : '', atraso, cancel, cont, sit});
+  });
+  return out;
+}
+
+function pdCards(){
+  const base = listaClientesCompleta();
+  const cards = {}, semCadastro = [];
+  pd.open.forEach(o=>{
+    let c = base.find(b=>normalizarCota(b.grupo)===o.grupo && normalizarCota(b.cota)===o.cota);
+    if(!c && o.nome){
+      const tk = pdNorm(o.nome).split(' ').filter(w=>w.length>2);
+      const cand = base.filter(b=>{ const n=pdNorm(b.nome); return tk.length && tk.every(w=>n.includes(w)); });
+      if(cand.length===1) c=cand[0];
+    }
+    const nome = c ? c.nome : pdTitle(o.nome || ('Cota '+o.grupo+'/'+o.cota));
+    const tel = c ? c.tel : '';
+    const seg = c ? c._seg : (/^16\d{2}$/.test(o.grupo) ? 'veiculos' : 'imoveis');
+    if(!c) semCadastro.push(`${nome} (${o.grupo}/${o.cota})`);
+    const key = (tel && telLimpo(tel)) || ('n-'+pdNorm(nome));
+    const card = cards[key] || (cards[key] = {key, nome, tel, segs:new Set(), cotas:[], atraso:0, cancel:false, cont:false, cadastrado:!!c});
+    card.segs.add(seg);
+    if(!card.cotas.some(x=>x.grupo===o.grupo && x.cota===o.cota)) card.cotas.push({grupo:o.grupo, cota:o.cota});
+    card.atraso = Math.max(card.atraso, o.atraso);
+    if(o.cancel) card.cancel=true; if(o.cont) card.cont=true;
+  });
+  Object.values(cards).forEach(c=>{ c.tipo = c.segs.size>1 ? 'misto' : [...c.segs][0]; });
+  return {cards:Object.values(cards), semCadastro};
+}
+
+function pdSaud(){ const h=new Date().getHours(); return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'; }
+function pdCtx(card){
+  const pl = card.cotas.length>1, p=(s,q)=>pl?q:s;
+  const cot = card.cotas.length===1 ? `grupo ${card.cotas[0].grupo}, cota ${card.cotas[0].cota}` : card.cotas.map(c=>c.grupo+'/'+c.cota).join(', ').replace(/, ([^,]*)$/,' e $1');
+  const imv = (card.tipo==='imoveis'||card.tipo==='misto') ? `\n\nDo meu lado, sigo atento e trabalhando todo mês na tentativa de contemplação ${p('da sua cota','das suas cotas')}.` : '';
+  const contL = card.cont ? `\n\nComo ${p('sua cota já foi contemplada','suas cotas já foram contempladas')}, manter as parcelas em dia é o que garante a segurança do seu bem.` : '';
+  return {
+    nome: primeiroNome(pdTitle(card.nome)), c:'Lucca', saud:pdSaud(), n: pd.atr[card.key]||card.atraso, p,
+    cot: ` (${cot})`, imv: contL+imv,
+    ass: pd.cfg.ass ? ` A próxima assembleia é no dia *${pdDM(pd.cfg.ass)}*.` : '',
+    venc: pd.cfg.venc ? ` (dia *${pdDM(pd.cfg.venc)}*)` : '',
+    objConq: {imoveis:'conquistar o seu imóvel', veiculos:'conquistar o seu veículo'}[card.tipo] || 'tirar o seu projeto do papel',
+    suaCota:p('sua cota','suas cotas'), daSuaCota:p('da sua cota','das suas cotas'), aCota:p('a cota','as cotas'), esta:p('está','estão')
+  };
+}
+const PD_TPL = {
+  1: [
+    {label:'Antecipar o próximo mês', trig:['Aversão à perda','Antecipação','Facilidade'], f:x=>
+`${x.saud}, ${x.nome}! Tudo bem? Aqui é o ${x.c}, seu consultor Ademicon.
+
+Fiz a conferência da carteira e vi que a parcela deste mês ${x.daSuaCota}${x.cot} ainda não foi identificada como paga. Com isso, ${x.aCota} ${x.p('ficou','ficaram')} de fora da assembleia deste mês.
+
+O ponto de atenção agora é o mês que vem: para ${x.aCota} voltar a concorrer, *essa parcela em aberto e a próxima precisam estar pagas até o vencimento*${x.venc}.${x.ass} Se ficar pra depois, as duas acabam vencendo juntas.${x.imv}
+
+Pra facilitar, posso te enviar o boleto em aberto agora? Assim você resolve hoje e no mês que vem fica só a parcela normal.
+
+Se já pagou, pode desconsiderar.`},
+    {label:'Reciprocidade', trig:['Reciprocidade','Compromisso','Benefício'], f:x=>
+`${x.saud}, ${x.nome}! ${x.c} aqui.
+
+Estou acompanhando de perto ${x.suaCota}${x.cot} e vi que a parcela deste mês ficou em aberto, então ${x.aCota} não ${x.p('participou','participaram')} da assembleia deste mês.
+
+Cada assembleia em dia é mais uma chance real de contemplação, e foi pra isso que a gente montou esse planejamento: ${x.objConq} sem pagar juros de financiamento. Pra não perder a próxima também, o ideal é quitar essa parcela agora, antes de vencer a do mês que vem${x.venc}.${x.ass}${x.imv}
+
+Já deixei tudo separado do meu lado. Posso te mandar o boleto pra você resolver em um minuto?
+
+Caso já tenha pago, é só desconsiderar.`},
+    {label:'Direta', trig:['Antecipação','Simplicidade'], f:x=>
+`Oi, ${x.nome}, tudo certo? É o ${x.c}.
+
+A parcela deste mês ${x.daSuaCota}${x.cot} ficou em aberto, e com isso ${x.aCota} ${x.p('ficou','ficaram')} fora da assembleia deste mês.
+
+Pra voltar a concorrer na próxima, essa parcela e a do mês que vem precisam estar em dia${x.venc}. Te envio o boleto em aberto agora pra você já deixar resolvido?
+
+Se já pagou, desconsidere.`}
+  ],
+  2: [
+    {label:'Duas opções', trig:['Aversão à perda','Escolha guiada','Facilidade'], f:x=>
+`${x.saud}, ${x.nome}! Tudo bem? Aqui é o ${x.c}, seu consultor Ademicon.
+
+Revisando a carteira, vi que ${x.suaCota}${x.cot} ${x.esta} com duas parcelas em aberto, e por isso ${x.p('ficou','ficaram')} fora das últimas assembleias. Cada assembleia que passa é uma chance de contemplação que não volta.${x.imv}
+
+Para ${x.aCota} voltar a concorrer, separei dois caminhos pra você escolher o que fica melhor:
+
+*1.* Te envio *os dois boletos* e você resolve tudo de uma vez.
+*2.* Te envio *só o boleto mais recente*, e a parcela anterior é diluída nas próximas, sem pesar no bolso agora.${x.ass}
+
+Qual prefere? É só me responder *1* ou *2* que eu já te mando.`},
+    {label:'Compromisso', trig:['Compromisso','Escolha guiada','Facilidade'], f:x=>
+`${x.saud}, ${x.nome}! ${x.c} aqui.
+
+Quero te ajudar a retomar o ritmo do seu planejamento. Duas parcelas ${x.daSuaCota}${x.cot} ficaram em aberto, e isso tira ${x.aCota} da disputa pela contemplação até regularizar.${x.imv}
+
+A boa notícia é que você pode escolher como resolver:
+
+*1.* Os dois boletos juntos, pra quitar tudo agora.
+*2.* Só o boleto mais recente, com a parcela anterior diluída nas próximas.${x.ass}
+
+Quando a gente começou, o objetivo era ${x.objConq}. Me diz *1* ou *2* que eu já te envio.`},
+    {label:'Direta', trig:['Escolha guiada','Simplicidade'], f:x=>
+`Oi, ${x.nome}, tudo certo? É o ${x.c}.
+
+${x.p('Sua cota','Suas cotas')}${x.cot} ${x.esta} com duas parcelas em aberto e, por isso, fora das assembleias.
+
+Como prefere regularizar?
+*1.* Os dois boletos juntos
+*2.* Só o mais recente, com a anterior diluída nas próximas
+
+Me responde *1* ou *2* que eu te mando por aqui.`}
+  ],
+  3: [
+    {label:'Caminho leve', trig:['Compromisso e coerência','Solução pronta','Facilidade'], f:x=>
+`${x.saud}, ${x.nome}! Tudo bem? Aqui é o ${x.c}, seu consultor Ademicon.
+
+Estou passando porque ${x.suaCota}${x.cot} ${x.esta} com ${x.n} parcelas em aberto, e quero te ajudar a colocar isso em dia do jeito mais leve possível.
+
+Em vez de pagar tudo de uma vez, consigo te enviar *só o boleto mais recente*, e as parcelas anteriores são diluídas nas próximas. Assim ${x.aCota} ${x.p('volta','voltam')} a ficar ${x.p('ativa','ativas')} e concorrendo.${x.ass}${x.imv}
+
+Quando a gente começou, o objetivo era ${x.objConq}. Ainda está de pé? Se quiser, já te mando o boleto por aqui.`},
+    {label:'Alerta consultivo', trig:['Aversão à perda','Autoridade','Solução pronta'], f:x=>
+`${x.saud}, ${x.nome}! ${x.c} aqui.
+
+Preciso te dar um toque importante, como seu consultor: ${x.suaCota}${x.cot} já ${x.esta} com ${x.n} parcelas em aberto.
+
+Quanto mais tempo assim, maior o risco de ${x.p('a cota ser cancelada','as cotas serem canceladas')} pela administradora, e aí todo o caminho que você já percorreu se perde. Não quero que isso aconteça com você.
+
+Dá pra resolver de forma leve: te envio só o boleto mais recente, e as anteriores são diluídas nas próximas parcelas.${x.imv}
+
+Posso te mandar o boleto? Se preferir, a gente conversa rapidinho por ligação pra achar o melhor caminho.`},
+    {label:'Direta', trig:['Simplicidade','Solução pronta'], f:x=>
+`Oi, ${x.nome}, tudo bem? É o ${x.c}.
+
+Vi que ${x.suaCota}${x.cot} ${x.esta} com ${x.n} parcelas em aberto. Quero te ajudar a regularizar sem pesar no bolso: te envio só o boleto mais recente e as anteriores são diluídas nas próximas parcelas.
+
+Posso te mandar por aqui?`}
+  ],
+  4: [
+    {label:'Proteger o patrimônio', trig:['Aversão à perda','Autoridade','Urgência'], f:x=>
+`${x.saud}, ${x.nome}! Tudo bem? Aqui é o ${x.c}, seu consultor Ademicon.
+
+Preciso falar com você sobre ${x.suaCota}${x.cot}: no sistema da administradora ${x.p('ela já aparece','elas já aparecem')} como *sujeita a cancelamento* por causa das parcelas em aberto.
+
+Não quero que você perca o que já construiu até aqui. Se ${x.p('a cota for cancelada','as cotas forem canceladas')}, você perde a posição no grupo e o valor pago só volta lá na frente. A boa notícia é que ainda dá pra reverter.${x.imv}
+
+O caminho mais leve: te envio só o boleto mais recente, e as parcelas anteriores são diluídas nas próximas. Com o pagamento feito, ${x.aCota} ${x.p('volta','voltam')} a ficar ${x.p('ativa','ativas')}.
+
+Posso te mandar o boleto agora? Se preferir, a gente faz uma ligação rápida e acha a melhor saída juntos.`},
+    {label:'Direta e urgente', trig:['Urgência','Aversão à perda','Facilidade'], f:x=>
+`Oi, ${x.nome}, tudo bem? É o ${x.c}.
+
+Estou te chamando porque ${x.suaCota}${x.cot} entrou na lista de cotas sujeitas a cancelamento. Ainda dá tempo de reverter, e quero te ajudar com isso hoje.
+
+Te envio o boleto mais recente? As parcelas anteriores são diluídas nas próximas. Me responde com um *SIM* que eu já mando.`}
+  ]
+};
+function pdMsg(card){
+  const x = pdCtx(card);
+  const sc = card.cancel ? 4 : x.n>=3 ? 3 : x.n===2 ? 2 : 1;
+  const lista = PD_TPL[sc], tpl = lista[(pd.ver[card.key]||0) % lista.length];
+  let t = tpl.f(x);
+  if(pd.cfg.ia) t += `\n\n_Mensagem enviada com apoio de I.A. Qualquer dúvida, eu (Lucca) estou por aqui._`;
+  return {text:t, tpl, sc, n:x.n};
+}
+
+let PD_CARDS = [];
+function pdRender(){
+  const {cards, semCadastro} = pdCards(); PD_CARDS = cards;
+  const enviadas = cards.filter(c=>pd.sent[c.key]).length;
+  const cotasAb = cards.reduce((a,c)=>a+c.cotas.length,0);
+  const canc = cards.filter(c=>c.cancel).length;
+  const tab = document.getElementById('countParcelasTab'); if(tab) tab.textContent = cards.length-enviadas;
+  document.getElementById('pdSummary').textContent = pd.open.length ? `${cotasAb} cota(s) em aberto · ${cards.length} mensagem(ns)` : 'Nenhum relatório carregado';
+  document.getElementById('pdStats').innerHTML = pd.open.length ? `
+    <div class="stat-card"><div class="stat-label">Clientes</div><div class="stat-value">${cards.length}</div><div class="stat-sub">${cotasAb} cota(s) em aberto</div></div>
+    <div class="stat-card"><div class="stat-label">A enviar</div><div class="stat-value">${cards.length-enviadas}</div><div class="stat-sub">${enviadas} enviada(s)</div></div>
+    <div class="stat-card"><div class="stat-label">2+ parcelas</div><div class="stat-value">${cards.filter(c=>!c.cancel && (pd.atr[c.key]||c.atraso)>=2).length}</div><div class="stat-sub">pedem mais atenção</div></div>
+    <div class="stat-card"><div class="stat-label">Sujeitas a cancelamento</div><div class="stat-value">${canc}</div><div class="stat-sub">${canc?'prioridade do dia':'nenhuma'}</div></div>` : '';
+  document.getElementById('pdWarn').innerHTML = semCadastro.length ? `<div class="pd-warn"><b>Sem cadastro na aba Clientes:</b> ${semCadastro.map(rdEsc).join(', ')}. Digite o WhatsApp no card ou cadastre o cliente.</div>` : '';
+  document.querySelectorAll('#pdFiltroTipo button').forEach(b=>b.classList.toggle('active', b.dataset.v===pd.ft));
+  document.querySelectorAll('#pdFiltroStatus button').forEach(b=>b.classList.toggle('active', b.dataset.v===pd.fs));
+  const el = document.getElementById('pdLista');
+  if(!pd.open.length){ el.innerHTML = `<div class="pd-empty">Suba o Relatório de Cobrança do AVA Pro acima. Os clientes em aberto aparecem aqui com a mensagem pronta.</div>`; return; }
+  const vis = cards.filter(c=>{
+    if(pd.ft!=='all' && c.tipo!==pd.ft && c.tipo!=='misto') return false;
+    if(pd.fs==='pend' && pd.sent[c.key]) return false;
+    if(pd.fs==='sent' && !pd.sent[c.key]) return false;
+    return true;
+  }).sort((a,b)=>(b.cancel-a.cancel) || ((pd.atr[b.key]||b.atraso)-(pd.atr[a.key]||a.atraso)) || a.nome.localeCompare(b.nome));
+  if(!vis.length){ el.innerHTML = `<div class="pd-empty">${pd.fs==='pend'?'Todas as mensagens deste filtro já foram enviadas.':'Nada neste filtro.'}</div>`; return; }
+  el.innerHTML = vis.map(card=>{
+    const m = pdMsg(card), sent = !!pd.sent[card.key];
+    const tel = pd.tel[card.key] || card.tel, wa = pdWa(tel);
+    const txt = pd.edit[card.key] ?? m.text;
+    const sev = m.sc>=3 ? 's3' : m.sc===2 ? 's2' : '';
+    const seg = {imoveis:'🏠 Imóvel', veiculos:'🚗 Veículo', misto:'🏠🚗 Imóvel e veículo'}[card.tipo];
+    return `<article class="pd-card ${sev}${sent?' sent':''}" data-k="${rdEsc(card.key)}">
+      <div class="pd-head"><h4 class="pd-nome">${rdEsc(card.cadastrado ? card.nome : pdTitle(card.nome))}</h4>
+        <div class="pd-meta">${wa?`<span>${rdEsc(pdFmtTel(tel))}</span>`:''}<span>${card.cotas.map(c=>c.grupo+'/'+c.cota).join(' · ')}</span><span>${seg}</span></div></div>
+      ${wa?'':`<div class="pd-tel"><input type="tel" class="pd-in-tel" placeholder="WhatsApp com DDD" aria-label="WhatsApp de ${rdEsc(card.nome)}"/></div>`}
+      <div class="pd-tags">
+        <span class="pd-step"><button data-a="menos" aria-label="Menos parcelas">−</button><span>${m.n===1?'1 parcela':m.n+' parcelas'} em aberto</span><button data-a="mais" aria-label="Mais parcelas">+</button></span>
+        ${card.cancel?'<span class="rd-pill near">Sujeita a cancelamento</span>':''}
+        ${card.cont?'<span class="rd-pill done">Contemplada</span>':''}
+        ${sent?'<span class="rd-pill win">Enviada</span>':''}
+      </div>
+      <div class="pd-tags">${m.tpl.trig.map(t=>`<span class="rd-pill pd-trig">${rdEsc(t)}</span>`).join('')}<span class="rd-pill off">Versão: ${rdEsc(m.tpl.label)}</span></div>
+      <textarea class="pd-msg" aria-label="Mensagem para ${rdEsc(card.nome)}">${rdEsc(txt)}</textarea>
+      <div class="pd-acts">
+        <button class="btn btn-outline btn-sm" data-a="copiar">Copiar</button>
+        <button class="btn btn-whatsapp btn-sm" data-a="wa"${wa?'':' disabled style="opacity:.45"'}>Abrir no WhatsApp</button>
+        <button class="btn btn-outline btn-sm" data-a="versao">Outra versão</button>
+        <span class="sp"></span>
+        <button class="btn ${sent?'btn-outline':'btn-primary'} btn-sm" data-a="enviada">${sent?'Desfazer':'Marcar enviada'}</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+(function pdInit(){
+  const box = document.getElementById('pdUploadBox'), inp = document.getElementById('pdFile');
+  async function ler(file){
+    try{
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw:false, defval:''}).map(r=>r.map(c=>String(c).trim())).filter(r=>r.some(Boolean));
+      const open = pdLerRelatorio(rows);
+      if(!open) return toast('Não encontrei as colunas Grupo e Cota nesse arquivo. É o Relatório de Cobrança do AVA Pro?', true);
+      if(!open.length) return toast('Nenhuma cota em aberto nesse relatório.', true);
+      pd.open = open; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pdSave(); pdRender();
+      toast(`${open.length} cota(s) em aberto carregada(s).`);
+    }catch(e){ console.error(e); toast('Não consegui ler esse arquivo.', true); }
+  }
+  inp.addEventListener('change', ()=>{ if(inp.files[0]) ler(inp.files[0]); inp.value=''; });
+  ['dragenter','dragover'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.add('dragover'); }));
+  ['dragleave','drop'].forEach(ev=>box.addEventListener(ev, e=>{ e.preventDefault(); box.classList.remove('dragover'); }));
+  box.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) ler(f); });
+
+  [['pdVenc','venc'],['pdAss','ass']].forEach(([id,k])=>{ const el=document.getElementById(id); el.value=pd.cfg[k]||''; el.addEventListener('change', ()=>{ pd.cfg[k]=el.value; pd.edit={}; pdSave(); pdRender(); }); });
+  const ia = document.getElementById('pdIa'); ia.checked=!!pd.cfg.ia; ia.addEventListener('change', ()=>{ pd.cfg.ia=ia.checked; pd.edit={}; pdSave(); pdRender(); });
+
+  document.getElementById('pdFiltroTipo').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pd.ft=b.dataset.v; pdSave(); pdRender(); });
+  document.getElementById('pdFiltroStatus').addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; pd.fs=b.dataset.v; pdSave(); pdRender(); });
+
+  let armado = 0; const rb = document.getElementById('pdReset');
+  rb.addEventListener('click', ()=>{
+    if(Date.now()-armado>3000){ armado=Date.now(); rb.textContent='Toque de novo para confirmar'; setTimeout(()=>rb.textContent='Limpar lista do mês',3000); return; }
+    pd.open=[]; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pd.tel={}; pdSave(); pdRender(); rb.textContent='Limpar lista do mês'; toast('Lista do mês limpa.');
+  });
+
+  const lista = document.getElementById('pdLista');
+  lista.addEventListener('click', e=>{
+    const b = e.target.closest('button[data-a]'); if(!b) return;
+    const art = b.closest('.pd-card'), k = art.dataset.k, card = PD_CARDS.find(c=>c.key===k), ta = art.querySelector('.pd-msg');
+    const a = b.dataset.a;
+    if(a==='copiar'){
+      const ok=()=>toast('Mensagem copiada.'), falha=()=>{ ta.select(); toast('Texto selecionado: copie com Ctrl+C'); };
+      try{ navigator.clipboard.writeText(ta.value).then(ok, falha); }catch(err){ falha(); }
+      return;
+    }
+    if(a==='wa'){ const tel = pd.tel[k]||card.tel; if(pdWa(tel)) abrirWhatsApp(pdWa(tel), ta.value); return; }
+    if(a==='versao'){ pd.ver[k]=(pd.ver[k]||0)+1; delete pd.edit[k]; }
+    if(a==='mais'||a==='menos'){ const cur=pd.atr[k]||card.atraso; pd.atr[k]=Math.max(1,Math.min(24,cur+(a==='mais'?1:-1))); delete pd.edit[k]; }
+    if(a==='enviada'){ pd.sent[k]=!pd.sent[k]; if(pd.sent[k]) toast('Marcada como enviada.'); }
+    pdSave(); pdRender();
+  });
+  lista.addEventListener('input', e=>{ if(!e.target.classList.contains('pd-msg')) return; const k=e.target.closest('.pd-card').dataset.k; pd.edit[k]=e.target.value; pdSave(); });
+  lista.addEventListener('change', e=>{
+    if(!e.target.classList.contains('pd-in-tel')) return;
+    const k=e.target.closest('.pd-card').dataset.k;
+    if(pdDig(e.target.value).length>=10){ pd.tel[k]=e.target.value; pdSave(); pdRender(); } else toast('Número incompleto: inclua o DDD.', true);
+  });
+})();
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('dataAssembleia').value = dataImoveis;
 document.getElementById('dataAssembleiaVeic').value = dataVeiculos;
@@ -2328,6 +2707,7 @@ renderClientes('imoveis');
 renderClientes('veiculos');
 renderTabelaClientes();
 rdRender(true);
+pdRender();
 </script>
 </body>
 </html>
