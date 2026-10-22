@@ -602,6 +602,22 @@
   .pd-x { border:0; background:transparent; color:#A93226; cursor:pointer; font-size:13px; padding:4px 8px; border-radius:var(--radius-sm); }
   .pd-x:hover { background:#FDECEA; }
   @media (max-width:640px){ .pd-man { grid-template-columns:minmax(0,1fr); } }
+  .pd-filabar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; background:#fff; border:1px solid var(--cinza-borda); border-radius:var(--radius); padding:12px 16px; margin-bottom:12px; }
+  .pd-filabar p { margin:0; font-size:13px; color:var(--texto-sec); max-width:60ch; }
+  .pd-filabar select { padding:7px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); background:#fff; color:var(--texto); }
+  .pd-fila { position:fixed; left:0; right:0; bottom:0; z-index:250; background:var(--bordo-abs); color:#F5F1E8; border-top:2px solid var(--ouro); padding:12px max(16px, env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); box-shadow:0 -8px 24px rgba(37,7,13,.25); }
+  .pd-fila-in { max-width:1100px; margin:0 auto; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; }
+  .pd-fila-info { flex:1; min-width:200px; }
+  .pd-fila-cont { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ouro-claro); font-variant-numeric:tabular-nums; }
+  .pd-fila-nome { font-family:var(--display); font-size:22px; font-weight:600; line-height:1.15; }
+  .pd-fila-bar { height:4px; background:rgba(255,255,255,.15); border-radius:3px; overflow:hidden; margin-top:6px; }
+  .pd-fila-bar i { display:block; height:100%; background:var(--ouro); transition:width .3s; }
+  .pd-fila-acts { display:flex; flex-wrap:wrap; gap:8px; }
+  .pd-fila .btn-outline { background:transparent; color:#F5F1E8; border-color:rgba(245,241,232,.35); }
+  .pd-fila .btn-gold { background:var(--ouro); border-color:var(--ouro); color:var(--bordo-abs); font-weight:600; }
+  .pd-card.atual { outline:2px solid var(--ouro); outline-offset:2px; }
+  body.pd-fila-on { padding-bottom:150px; }
+  body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
 </style>
 </head>
@@ -968,7 +984,33 @@
   <div class="rd-filter" id="pdFiltroStatus">
     <button data-v="pend" class="active">A enviar</button><button data-v="sent">Enviadas</button><button data-v="all">Todas</button>
   </div>
+  <div class="pd-filabar" id="pdFilaBar">
+    <p>Modo fila: o painel abre a conversa de cada cliente com a mensagem pronta. Você envia no WhatsApp, volta aqui e toca em "Enviei, próximo".</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="pdModo" aria-label="Abrir conversas em">
+        <option value="web">WhatsApp Web</option>
+        <option value="app">App do WhatsApp (computador)</option>
+        <option value="celular">Celular</option>
+      </select>
+      <button class="btn btn-primary" id="pdFilaIniciar">▶ Iniciar fila</button>
+    </div>
+  </div>
   <div class="pd-grid" id="pdLista"></div>
+  <div class="pd-fila" id="pdFila" hidden>
+    <div class="pd-fila-in">
+      <div class="pd-fila-info">
+        <div class="pd-fila-cont" id="pdFilaCont"></div>
+        <div class="pd-fila-nome" id="pdFilaNome"></div>
+        <div class="pd-fila-bar"><i id="pdFilaProg"></i></div>
+      </div>
+      <div class="pd-fila-acts">
+        <button class="btn btn-outline btn-sm" id="pdFilaReabrir">Abrir de novo</button>
+        <button class="btn btn-outline btn-sm" id="pdFilaPular">Pular</button>
+        <button class="btn btn-outline btn-sm" id="pdFilaParar">Parar</button>
+        <button class="btn btn-gold" id="pdFilaProx">✓ Enviei, próximo</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -2623,6 +2665,55 @@ function pdRenderManual(){
   document.getElementById('pdManList').innerHTML = man.map(({o,i})=>`<div class="assembleia-item"><span class="grp">${rdEsc(o.grupo)}/${rdEsc(o.cota)}</span><span class="contemp">${rdEsc(o.nome||'')}</span><span class="cotas-tag">${o.cancel?'Sujeita a cancelamento':(o.atraso===1?'1 parcela':o.atraso+' parcelas')}</span><button class="pd-x" data-rm="${i}" aria-label="Remover ${rdEsc(o.nome||'')}">Remover</button></div>`).join('');
 }
 
+function pdVisiveis(cards, fs){
+  return cards.filter(c=>{
+    if(pd.ft!=='all' && c.tipo!==pd.ft && c.tipo!=='misto') return false;
+    if(fs==='pend' && pd.sent[c.key]) return false;
+    if(fs==='sent' && !pd.sent[c.key]) return false;
+    return true;
+  }).sort((a,b)=>(b.cancel-a.cancel) || ((pd.atr[b.key]||b.atraso)-(pd.atr[a.key]||a.atraso)) || a.nome.localeCompare(b.nome));
+}
+
+// ─── MODO FILA ───
+let pdFila = null; // {keys:[], i:0}
+function pdAbrirConversa(tel, msg){
+  const num = pdWa(tel); if(!num) return;
+  const t = encodeURIComponent(msg), modo = pd.modo || 'web';
+  const url = modo==='app' ? `whatsapp://send?phone=${num}&text=${t}` : modo==='celular' ? `https://wa.me/${num}?text=${t}` : `https://web.whatsapp.com/send?phone=${num}&text=${t}`;
+  if(modo==='app'){ location.href = url; return; }
+  const w = window.open(url, modo==='web' ? 'pdWhatsapp' : '_blank');
+  if(!w){ const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+}
+function pdFilaAtual(){ return pdFila ? PD_CARDS.find(c=>c.key===pdFila.keys[pdFila.i]) : null; }
+function pdFilaAbrir(){
+  const c = pdFilaAtual(); if(!c) return;
+  pdAbrirConversa(pd.tel[c.key]||c.tel, pd.edit[c.key] ?? pdMsg(c).text);
+}
+function pdFilaUI(){
+  const box = document.getElementById('pdFila');
+  const on = !!pdFila && pdFila.i < pdFila.keys.length;
+  box.hidden = !on; document.body.classList.toggle('pd-fila-on', on);
+  document.querySelectorAll('.pd-card.atual').forEach(e=>e.classList.remove('atual'));
+  if(!on) return;
+  const c = pdFilaAtual(), n = pdFila.keys.length;
+  document.getElementById('pdFilaCont').textContent = `Cliente ${pdFila.i+1} de ${n}`;
+  document.getElementById('pdFilaNome').textContent = c ? c.nome : '';
+  document.getElementById('pdFilaProg').style.width = (pdFila.i/n*100)+'%';
+  document.getElementById('pdFilaProx').textContent = pdFila.i+1<n ? '✓ Enviei, próximo' : '✓ Enviei, concluir';
+  const art = c && document.querySelector(`.pd-card[data-k="${CSS.escape(c.key)}"]`);
+  if(art){ art.classList.add('atual'); try{ art.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }
+}
+function pdFilaAvancar(marcar){
+  if(!pdFila) return;
+  const c = pdFilaAtual();
+  if(marcar && c){ pd.sent[c.key] = true; pdSave(); }
+  pdFila.i++;
+  while(pdFila.i < pdFila.keys.length && pd.sent[pdFila.keys[pdFila.i]]) pdFila.i++;
+  pdRender();
+  if(pdFila.i >= pdFila.keys.length){ const t=pdFila.keys.length; pdFila=null; pdFilaUI(); toast(`Fila concluída: ${t} cliente(s).`); return; }
+  pdFilaAbrir(); pdFilaUI();
+}
+
 let PD_CARDS = [];
 function pdRender(){
   pdRenderManual();
@@ -2642,12 +2733,7 @@ function pdRender(){
   document.querySelectorAll('#pdFiltroStatus button').forEach(b=>b.classList.toggle('active', b.dataset.v===pd.fs));
   const el = document.getElementById('pdLista');
   if(!pd.open.length){ el.innerHTML = `<div class="pd-empty">Suba o Relatório de Cobrança do AVA Pro ou cadastre manualmente acima. Os clientes em aberto aparecem aqui com a mensagem pronta.</div>`; return; }
-  const vis = cards.filter(c=>{
-    if(pd.ft!=='all' && c.tipo!==pd.ft && c.tipo!=='misto') return false;
-    if(pd.fs==='pend' && pd.sent[c.key]) return false;
-    if(pd.fs==='sent' && !pd.sent[c.key]) return false;
-    return true;
-  }).sort((a,b)=>(b.cancel-a.cancel) || ((pd.atr[b.key]||b.atraso)-(pd.atr[a.key]||a.atraso)) || a.nome.localeCompare(b.nome));
+  const vis = pdVisiveis(cards, pd.fs);
   if(!vis.length){ el.innerHTML = `<div class="pd-empty">${pd.fs==='pend'?'Todas as mensagens deste filtro já foram enviadas.':'Nada neste filtro.'}</div>`; return; }
   el.innerHTML = vis.map(card=>{
     const m = pdMsg(card), sent = !!pd.sent[card.key];
@@ -2676,6 +2762,7 @@ function pdRender(){
       </div>
     </article>`;
   }).join('');
+  if(pdFila) pdFilaUI();
 }
 
 (function pdInit(){
@@ -2709,6 +2796,24 @@ function pdRender(){
     if(Date.now()-armado>3000){ armado=Date.now(); rb.textContent='Toque de novo para confirmar'; setTimeout(()=>rb.textContent='Limpar lista do mês',3000); return; }
     pd.open=[]; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pd.tel={}; pdSave(); pdRender(); rb.textContent='Limpar lista do mês'; toast('Lista do mês limpa.');
   });
+
+  const modoSel = document.getElementById('pdModo');
+  if(!pd.modo) pd.modo = (window.matchMedia && matchMedia('(pointer:coarse)').matches) ? 'celular' : 'web';
+  modoSel.value = pd.modo;
+  modoSel.addEventListener('change', ()=>{ pd.modo = modoSel.value; pdSave(); });
+  document.getElementById('pdFilaIniciar').addEventListener('click', ()=>{
+    const fila = pdVisiveis(PD_CARDS, 'pend').filter(c=>pdWa(pd.tel[c.key]||c.tel));
+    const semTel = pdVisiveis(PD_CARDS, 'pend').length - fila.length;
+    if(!fila.length) return toast(semTel ? 'Os clientes pendentes estão sem WhatsApp. Digite o número no card.' : 'Não há mensagens pendentes neste filtro.', true);
+    if(pd.fs==='sent'){ pd.fs='pend'; pdSave(); pdRender(); }
+    pdFila = {keys: fila.map(c=>c.key), i:0};
+    pdFilaAbrir(); pdFilaUI();
+    if(semTel) toast(`${semTel} cliente(s) sem WhatsApp ficaram de fora da fila.`);
+  });
+  document.getElementById('pdFilaProx').addEventListener('click', ()=>pdFilaAvancar(true));
+  document.getElementById('pdFilaPular').addEventListener('click', ()=>pdFilaAvancar(false));
+  document.getElementById('pdFilaReabrir').addEventListener('click', pdFilaAbrir);
+  document.getElementById('pdFilaParar').addEventListener('click', ()=>{ pdFila=null; pdFilaUI(); toast('Fila pausada. O que já foi enviado ficou marcado.'); });
 
   const selCli = document.getElementById('pdManCli');
   selCli.addEventListener('change', ()=>{ document.getElementById('pdOutro').hidden = selCli.value!=='outro'; });
@@ -2749,7 +2854,7 @@ function pdRender(){
       try{ navigator.clipboard.writeText(ta.value).then(ok, falha); }catch(err){ falha(); }
       return;
     }
-    if(a==='wa'){ const tel = pd.tel[k]||card.tel; if(pdWa(tel)) abrirWhatsApp(pdWa(tel), ta.value); return; }
+    if(a==='wa'){ const tel = pd.tel[k]||card.tel; if(pdWa(tel)) pdAbrirConversa(tel, ta.value); return; }
     if(a==='versao'){ pd.ver[k]=(pd.ver[k]||0)+1; delete pd.edit[k]; }
     if(a==='mais'||a==='menos'){ const cur=pd.atr[k]||card.atraso; pd.atr[k]=Math.max(1,Math.min(24,cur+(a==='mais'?1:-1))); delete pd.edit[k]; }
     if(a==='enviada'){ pd.sent[k]=!pd.sent[k]; if(pd.sent[k]) toast('Marcada como enviada.'); }
