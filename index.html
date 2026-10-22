@@ -592,6 +592,16 @@
   .pd-cfg label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
   .pd-cfg input[type=date] { width:100%; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); font-family:var(--fonte); font-size:13px; background:#fff; color:var(--texto); }
   .pd-warn { font-size:12.5px; color:#7A5A12; background:var(--laranja-light); border-radius:var(--radius-sm); padding:8px 12px; margin-top:10px; }
+  .pd-man { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto; gap:10px; align-items:end; }
+  .pd-man label, .pd-outro label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
+  .pd-man select, .pd-outro input { width:100%; padding:8px 10px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); background:#fff; color:var(--texto); }
+  .pd-outro { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-top:10px; }
+  .pd-outro[hidden] { display:none; }
+  .pd-manlist { margin-top:12px; }
+  .pd-manlist .assembleia-item .contemp { min-width:0; }
+  .pd-x { border:0; background:transparent; color:#A93226; cursor:pointer; font-size:13px; padding:4px 8px; border-radius:var(--radius-sm); }
+  .pd-x:hover { background:#FDECEA; }
+  @media (max-width:640px){ .pd-man { grid-template-columns:minmax(0,1fr); } }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
 </style>
 </head>
@@ -912,6 +922,31 @@
         <div class="upload-title">Clique ou arraste o Relatório de Cobrança do AVA Pro</div>
         <div class="upload-sub">As cotas em aberto são cruzadas com os clientes da aba Clientes</div>
       </div>
+      <div class="divider-or">ou cadastre manualmente</div>
+      <p style="font-size:12px;color:var(--texto-sec);margin-bottom:10px;">Para os clientes da matrícula dos gestores, que não aparecem no seu relatório. Eles continuam na lista mesmo quando você sobe o relatório do AVA Pro.</p>
+      <div class="pd-man">
+        <div><label for="pdManCli">Cliente e cota</label><select id="pdManCli"></select></div>
+        <div><label for="pdManSit">Situação</label>
+          <select id="pdManSit">
+            <option value="1">1 parcela em aberto</option>
+            <option value="2">2 parcelas em aberto</option>
+            <option value="3">3 parcelas em aberto</option>
+            <option value="4">4 parcelas em aberto</option>
+            <option value="5">5 ou mais em aberto</option>
+            <option value="canc">Sujeita a cancelamento</option>
+          </select>
+        </div>
+        <div><button class="btn btn-primary" id="pdManAdd">+ Adicionar</button></div>
+      </div>
+      <div class="pd-outro" id="pdOutro" hidden>
+        <div><label for="pdOutNome">Nome</label><input id="pdOutNome" type="text" placeholder="ex: João da Silva"/></div>
+        <div><label for="pdOutTel">WhatsApp</label><input id="pdOutTel" type="tel" placeholder="ex: (61) 99999-0000"/></div>
+        <div><label for="pdOutGrupo">Grupo</label><input id="pdOutGrupo" type="text" inputmode="numeric" placeholder="ex: 12154"/></div>
+        <div><label for="pdOutCota">Cota</label><input id="pdOutCota" type="text" inputmode="numeric" placeholder="ex: 6675"/></div>
+        <div><label for="pdOutSeg">Segmento</label><select id="pdOutSeg" style="width:100%;padding:8px 10px;border:1.5px solid var(--cinza-borda);border-radius:var(--radius-sm);font-size:13px;background:#fff;"><option value="imoveis">Imóveis</option><option value="veiculos">Veículos</option></select></div>
+      </div>
+      <div class="pd-manlist" id="pdManList"></div>
+      <div class="divider-or">próximo mês</div>
       <div class="pd-cfg">
         <div><label for="pdVenc">Próximo vencimento</label><input type="date" id="pdVenc"/></div>
         <div><label for="pdAss">Próxima assembleia</label><input type="date" id="pdAss"/></div>
@@ -2428,9 +2463,9 @@ function pdCards(){
       if(cand.length===1) c=cand[0];
     }
     const nome = c ? c.nome : pdTitle(o.nome || ('Cota '+o.grupo+'/'+o.cota));
-    const tel = c ? c.tel : '';
-    const seg = c ? c._seg : (/^16\d{2}$/.test(o.grupo) ? 'veiculos' : 'imoveis');
-    if(!c) semCadastro.push(`${nome} (${o.grupo}/${o.cota})`);
+    const tel = c ? c.tel : (o.tel||'');
+    const seg = c ? c._seg : (o.seg || (/^16\d{2}$/.test(o.grupo) ? 'veiculos' : 'imoveis'));
+    if(!c && !o.tel) semCadastro.push(`${nome} (${o.grupo}/${o.cota})`);
     const key = (tel && telLimpo(tel)) || ('n-'+pdNorm(nome));
     const card = cards[key] || (cards[key] = {key, nome, tel, segs:new Set(), cotas:[], atraso:0, cancel:false, cont:false, cadastrado:!!c});
     card.segs.add(seg);
@@ -2576,8 +2611,21 @@ function pdMsg(card){
   return {text:t, tpl, sc, n:x.n};
 }
 
+function pdRenderManual(){
+  const sel = document.getElementById('pdManCli'); if(!sel) return;
+  const atual = sel.value;
+  const base = listaClientesCompleta().slice().sort((a,b)=>((b.matricula==='gestores')-(a.matricula==='gestores')) || a.nome.localeCompare(b.nome));
+  const rot = {gestores:'Gestores', propria:'13581', atendimento:'Atendimento'};
+  sel.innerHTML = '<option value="">Escolha o cliente...</option>' + base.map(c=>`<option value="${c._seg}|${c._idx}">${rdEsc(c.nome)} · ${rdEsc(c.grupo)}/${rdEsc(c.cota)}${c.matricula?' · '+rot[c.matricula]:''}</option>`).join('') + '<option value="outro">Outro cliente (não cadastrado)</option>';
+  if([...sel.options].some(o=>o.value===atual)) sel.value = atual;
+  document.getElementById('pdOutro').hidden = sel.value!=='outro';
+  const man = pd.open.map((o,i)=>({o,i})).filter(x=>x.o.manual);
+  document.getElementById('pdManList').innerHTML = man.map(({o,i})=>`<div class="assembleia-item"><span class="grp">${rdEsc(o.grupo)}/${rdEsc(o.cota)}</span><span class="contemp">${rdEsc(o.nome||'')}</span><span class="cotas-tag">${o.cancel?'Sujeita a cancelamento':(o.atraso===1?'1 parcela':o.atraso+' parcelas')}</span><button class="pd-x" data-rm="${i}" aria-label="Remover ${rdEsc(o.nome||'')}">Remover</button></div>`).join('');
+}
+
 let PD_CARDS = [];
 function pdRender(){
+  pdRenderManual();
   const {cards, semCadastro} = pdCards(); PD_CARDS = cards;
   const enviadas = cards.filter(c=>pd.sent[c.key]).length;
   const cotasAb = cards.reduce((a,c)=>a+c.cotas.length,0);
@@ -2593,7 +2641,7 @@ function pdRender(){
   document.querySelectorAll('#pdFiltroTipo button').forEach(b=>b.classList.toggle('active', b.dataset.v===pd.ft));
   document.querySelectorAll('#pdFiltroStatus button').forEach(b=>b.classList.toggle('active', b.dataset.v===pd.fs));
   const el = document.getElementById('pdLista');
-  if(!pd.open.length){ el.innerHTML = `<div class="pd-empty">Suba o Relatório de Cobrança do AVA Pro acima. Os clientes em aberto aparecem aqui com a mensagem pronta.</div>`; return; }
+  if(!pd.open.length){ el.innerHTML = `<div class="pd-empty">Suba o Relatório de Cobrança do AVA Pro ou cadastre manualmente acima. Os clientes em aberto aparecem aqui com a mensagem pronta.</div>`; return; }
   const vis = cards.filter(c=>{
     if(pd.ft!=='all' && c.tipo!==pd.ft && c.tipo!=='misto') return false;
     if(pd.fs==='pend' && pd.sent[c.key]) return false;
@@ -2640,7 +2688,8 @@ function pdRender(){
       const open = pdLerRelatorio(rows);
       if(!open) return toast('Não encontrei as colunas Grupo e Cota nesse arquivo. É o Relatório de Cobrança do AVA Pro?', true);
       if(!open.length) return toast('Nenhuma cota em aberto nesse relatório.', true);
-      pd.open = open; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pdSave(); pdRender();
+      const manuais = pd.open.filter(o=>o.manual && !open.some(r=>r.grupo===o.grupo && r.cota===o.cota));
+      pd.open = open.concat(manuais); pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pdSave(); pdRender();
       toast(`${open.length} cota(s) em aberto carregada(s).`);
     }catch(e){ console.error(e); toast('Não consegui ler esse arquivo.', true); }
   }
@@ -2659,6 +2708,35 @@ function pdRender(){
   rb.addEventListener('click', ()=>{
     if(Date.now()-armado>3000){ armado=Date.now(); rb.textContent='Toque de novo para confirmar'; setTimeout(()=>rb.textContent='Limpar lista do mês',3000); return; }
     pd.open=[]; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pd.tel={}; pdSave(); pdRender(); rb.textContent='Limpar lista do mês'; toast('Lista do mês limpa.');
+  });
+
+  const selCli = document.getElementById('pdManCli');
+  selCli.addEventListener('change', ()=>{ document.getElementById('pdOutro').hidden = selCli.value!=='outro'; });
+  document.getElementById('pdManAdd').addEventListener('click', ()=>{
+    const v = selCli.value, sit = document.getElementById('pdManSit').value;
+    const atraso = sit==='canc' ? 3 : parseInt(sit,10), cancel = sit==='canc';
+    let e;
+    if(!v) return toast('Escolha o cliente.', true);
+    if(v==='outro'){
+      const nome=document.getElementById('pdOutNome').value.trim(), tel=document.getElementById('pdOutTel').value.trim();
+      const grupo=normalizarCota(pdDig(document.getElementById('pdOutGrupo').value)), cota=normalizarCota(pdDig(document.getElementById('pdOutCota').value));
+      if(!nome || !grupo || !cota) return toast('Preencha nome, grupo e cota.', true);
+      if(pdDig(tel).length<10) return toast('Informe o WhatsApp com DDD.', true);
+      e = {grupo, cota, nome, tel, seg:document.getElementById('pdOutSeg').value, atraso, cancel, cont:false, manual:true};
+      ['pdOutNome','pdOutTel','pdOutGrupo','pdOutCota'].forEach(id=>document.getElementById(id).value='');
+    } else {
+      const [seg, idx] = v.split('|'); const c = (seg==='imoveis'?clientesImoveis:clientesVeiculos)[+idx];
+      if(!c) return toast('Cliente não encontrado.', true);
+      e = {grupo:normalizarCota(pdDig(c.grupo)), cota:normalizarCota(pdDig(c.cota)), nome:c.nome, atraso, cancel, cont:false, manual:true};
+    }
+    const i = pd.open.findIndex(o=>o.grupo===e.grupo && o.cota===e.cota);
+    if(i>=0) pd.open[i] = Object.assign(pd.open[i], {atraso:e.atraso, cancel:e.cancel}); else pd.open.push(e);
+    selCli.value=''; document.getElementById('pdOutro').hidden=true;
+    pdSave(); pdRender(); toast(`${e.nome} adicionado à lista.`);
+  });
+  document.getElementById('pdManList').addEventListener('click', e=>{
+    const b = e.target.closest('[data-rm]'); if(!b) return;
+    pd.open.splice(+b.dataset.rm, 1); pdSave(); pdRender();
   });
 
   const lista = document.getElementById('pdLista');
