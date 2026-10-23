@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!--
+  © 2026 A&R Assessoria Estratégica Ltda. (ARVIA Capital) · CNPJ 63.972.524/0001-64
+  Todos os direitos reservados. Código-fonte, textos, layout e lógica deste sistema são de propriedade exclusiva
+  da A&R Assessoria Estratégica Ltda. É proibido copiar, reproduzir, distribuir, modificar ou criar obras derivadas,
+  no todo ou em parte, sem autorização prévia e por escrito. Lei nº 9.609/1998 e Lei nº 9.610/1998.
+  Contato para licenciamento: lucca.ribeiro@autorizadoademicon.com.br
+-->
+
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8"/>
@@ -646,6 +654,9 @@
   body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
   [hidden] { display:none !important; }
+  .arvia-copy { flex-basis:100%; margin:8px 0 0; font-size:11px; line-height:1.5; color:var(--texto-sec); opacity:.9; }
+  .arvia-copy strong { font-weight:600; }
+  .ax-copy { margin:4px 0 0; font-size:10.5px; line-height:1.5; color:var(--texto-sec); text-align:center; }
   /* ─── ACESSO / LOGIN ─── */
   html.arvia-locked body > header, html.arvia-locked body > main, html.arvia-locked body > footer { display:none !important; }
   .ax-gate { position:fixed; inset:0; z-index:400; background:radial-gradient(120% 90% at 20% 0%, #4A0D18 0%, var(--bordo-abs) 60%); display:flex; align-items:center; justify-content:center; padding:calc(24px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow-y:auto; }
@@ -731,6 +742,7 @@
     <div id="axCarregando" hidden><p>Carregando seus dados...</p></div>
 
     <div class="ax-msg" id="axMsg" hidden></div>
+    <p class="ax-copy">© 2026 A&amp;R Assessoria Estratégica Ltda. (ARVIA Capital). Todos os direitos reservados. Uso exclusivo de consultores autorizados. Proibida a cópia ou reprodução sem autorização.</p>
   </div>
 </div>
 <div class="ax-banner" id="axBanner" hidden><span>Há dados atualizados de outro aparelho.</span><button type="button" id="axBannerBtn">Atualizar</button></div>
@@ -1192,7 +1204,7 @@
   </div>
 </div>
 
-<footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span></footer>
+<footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span><p class="arvia-copy"><strong>© 2026 A&amp;R Assessoria Estratégica Ltda. (ARVIA Capital). Todos os direitos reservados.</strong> Ferramenta de uso exclusivo de consultores autorizados pela ARVIA Capital. É proibido copiar, reproduzir, distribuir, modificar ou criar versões derivadas deste sistema, no todo ou em parte, sem autorização prévia e por escrito. Protegido pela Lei nº 9.609/1998 (Lei do Software) e pela Lei nº 9.610/1998 (Lei de Direitos Autorais).</p></footer>
 
 <!-- MODAL IMPORTAÇÃO — MAPEAMENTO DE COLUNAS -->
 <div class="modal-overlay hidden" id="importModalOverlay">
