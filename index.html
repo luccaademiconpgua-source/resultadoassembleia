@@ -736,7 +736,13 @@
   .ad-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto; gap:10px; align-items:end; }
   .ad-form label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
   .ad-form input { width:100%; padding:8px 10px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); }
-  @media (max-width:640px){ .ad-form { grid-template-columns:minmax(0,1fr); } }
+  .ad-form4 { grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr) auto; }
+  .ad-senha { display:flex; gap:6px; } .ad-senha input { flex:1; min-width:0; font-family:ui-monospace,Menlo,monospace; }
+  .ad-cred { margin-top:12px; background:var(--verde-light); border:1px solid var(--verde-border); border-radius:var(--radius-sm); padding:12px 14px; font-size:13px; display:grid; gap:8px; }
+  .ad-cred pre { margin:0; white-space:pre-wrap; font:13px/1.5 ui-monospace,Menlo,monospace; background:#fff; border-radius:6px; padding:10px; border:1px solid var(--cinza-borda); }
+  .ad-cred .acts { display:flex; gap:8px; flex-wrap:wrap; }
+  @media (max-width:900px){ .ad-form4 { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+  @media (max-width:640px){ .ad-form, .ad-form4 { grid-template-columns:minmax(0,1fr); } }
   .ad-table-wrap { overflow-x:auto; background:#fff; border:1px solid var(--cinza-borda); border-radius:var(--radius); }
   .ad-table { width:100%; border-collapse:collapse; min-width:720px; font-size:13px; font-variant-numeric:tabular-nums; }
   .ad-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--texto-sec); padding:10px 12px; border-bottom:1px solid var(--cinza-borda); background:var(--cinza-bg); }
@@ -773,6 +779,7 @@
         <div><label for="axSenha1">Nova senha</label><input id="axSenha1" type="password" autocomplete="new-password" minlength="8" required/></div>
         <div><label for="axSenha2">Repita a senha</label><input id="axSenha2" type="password" autocomplete="new-password" minlength="8" required/></div>
         <button class="btn btn-primary" type="submit">Salvar senha e entrar</button>
+        <button class="ax-link" type="button" id="axCancelarSenha" hidden>Cancelar</button>
       </div>
     </form>
 
@@ -1232,14 +1239,16 @@
 <!-- TAB ACESSOS (admin) -->
 <div class="tab-panel" id="tab-acessos">
   <div class="assembleia-box">
-    <div class="assembleia-header"><h3>✉️ Convidar consultor</h3></div>
+    <div class="assembleia-header"><h3>➕ Cadastrar consultor</h3></div>
     <div class="assembleia-body open">
-      <div class="ad-form">
+      <div class="ad-form ad-form4">
         <div><label for="adNome">Nome</label><input id="adNome" type="text" placeholder="ex: Mariana Souza"/></div>
         <div><label for="adEmail">E-mail</label><input id="adEmail" type="email" placeholder="ex: mariana@email.com"/></div>
-        <div><button class="btn btn-primary" id="adConvidar">Enviar convite</button></div>
+        <div><label for="adSenha">Senha provisória</label><div class="ad-senha"><input id="adSenha" type="text" autocomplete="off" spellcheck="false"/><button class="btn btn-outline btn-sm" type="button" id="adGerar">Gerar</button></div></div>
+        <div><button class="btn btn-primary" id="adCriar">Criar acesso</button></div>
       </div>
-      <div class="hint">💡 A pessoa recebe um e-mail para criar a senha. Cada consultor vê só a própria carteira; você, como administrador, vê a de todos aqui embaixo.</div>
+      <div id="adCred"></div>
+      <div class="hint">💡 O acesso fica pronto na hora. Envie o e-mail e a senha provisória para o consultor; no primeiro login ele cria a própria senha. Cada consultor vê só a própria carteira; você vê a de todos aqui embaixo. <button class="ax-link" type="button" id="adConvidar" style="font-size:12px">Prefiro enviar convite por e-mail</button></div>
     </div>
   </div>
 
@@ -3345,6 +3354,9 @@ pdRender();
     if(error || !perfil){ await sb.auth.signOut(); USER=null; tela('axLogin'); return msg(error ? traduz(error) : 'Seu usuário não tem perfil no painel. Fale com o administrador.'); }
     if(!perfil.ativo){ await sb.auth.signOut(); USER=null; tela('axLogin'); return msg('Seu acesso está bloqueado. Fale com o administrador.'); }
     PERFIL = perfil;
+    if(user.user_metadata && user.user_metadata.trocar_senha){
+      tela('axNovaSenha'); $('axNovaTitulo').textContent = 'Crie a sua senha'; return;
+    }
 
     let linhas;
     try{ linhas = await baixar(); }
@@ -3385,8 +3397,10 @@ pdRender();
     const sub = document.querySelector('.logo-sub'); if(sub) sub.textContent = `${nome} · Parceiro autorizado Ademicon`;
     const hr = document.querySelector('.header-right');
     if(hr && !$('axUser')){
-      hr.insertAdjacentHTML('afterbegin', `<div class="ax-user" id="axUser"><span class="ax-sync" id="axSync">☁ Salvo</span><span class="ax-nome">${esc(nome.split(/\s+/)[0])}</span><button class="ax-sair" id="axSair" type="button">Sair</button></div>`);
+      hr.insertAdjacentHTML('afterbegin', `<div class="ax-user" id="axUser"><span class="ax-sync" id="axSync">☁ Salvo</span><span class="ax-nome">${esc(nome.split(/\s+/)[0])}</span><button class="ax-sair" id="axSenhaBtn" type="button">Senha</button><button class="ax-sair" id="axSair" type="button">Sair</button></div>`);
       $('axSair').addEventListener('click', sair);
+      $('axSenhaBtn').addEventListener('click', ()=>{ tela('axNovaSenha'); $('axNovaTitulo').textContent = 'Trocar a minha senha'; $('axCancelarSenha').hidden = false; });
+      $('axCancelarSenha').addEventListener('click', ()=>{ $('axCancelarSenha').hidden = true; liberar(); });
     }
     if(PERFIL.role==='admin'){ $('tabBtnAcessos').hidden = false; }
     $('tabBtnCrm').hidden = false; crmCarregar(true);
@@ -3442,7 +3456,7 @@ pdRender();
     const s1=$('axSenha1').value, s2=$('axSenha2').value;
     if(s1.length<8) return msg('A senha precisa ter pelo menos 8 caracteres.');
     if(s1!==s2) return msg('As duas senhas não são iguais.');
-    const { data, error } = await sb.auth.updateUser({ password:s1 });
+    const { data, error } = await sb.auth.updateUser({ password:s1, data:{ trocar_senha:false } });
     if(error) return msg(traduz(error));
     history.replaceState(null, '', REDIRECT);
     entrar(data.user);
@@ -3642,7 +3656,7 @@ pdRender();
         <td>${ult?fmtData(ult):'Nunca entrou'}</td>
         <td><div class="ad-acts">
           <button class="btn btn-outline btn-sm" data-ver="${u.id}">Ver carteira</button>
-          ${eu?'':`<button class="btn ${u.ativo?'btn-outline':'btn-primary'} btn-sm" data-bloq="${u.id}" data-ativo="${u.ativo?1:0}">${u.ativo?'Bloquear':'Desbloquear'}</button>`}
+          ${eu?'':`<button class="btn btn-outline btn-sm" data-senha="${u.id}" data-email="${esc(u.email)}" data-nome="${esc(u.nome||'')}">Nova senha</button><button class="btn ${u.ativo?'btn-outline':'btn-primary'} btn-sm" data-bloq="${u.id}" data-ativo="${u.ativo?1:0}">${u.ativo?'Bloquear':'Desbloquear'}</button>`}
         </div></td></tr>`;
     }).join('') || '<tr><td colspan="6">Nenhum usuário ainda.</td></tr>';
     if(AD.sel) verCarteira(AD.sel);
@@ -3672,6 +3686,15 @@ pdRender();
   }
   $('adBody').addEventListener('click', async e=>{
     const ver = e.target.closest('[data-ver]'); if(ver) return verCarteira(ver.dataset.ver);
+    const ns = e.target.closest('[data-senha]');
+    if(ns){
+      if(ns.dataset.arm!=='1'){ ns.dataset.arm='1'; ns.textContent='Confirmar nova senha'; setTimeout(()=>{ if(ns.isConnected){ ns.dataset.arm=''; ns.textContent='Nova senha'; } },3500); return; }
+      const senha = senhaProvisoria(); ns.disabled = true;
+      try{ await chamar('nova_senha', {id:ns.dataset.senha, senha}); mostrarCredenciais(ns.dataset.nome, ns.dataset.email, senha); $('adCred').scrollIntoView({behavior:'smooth', block:'center'}); }
+      catch(err){ toast(err.message, true); }
+      ns.disabled = false; ns.dataset.arm=''; ns.textContent='Nova senha';
+      return;
+    }
     const bq = e.target.closest('[data-bloq]'); if(!bq) return;
     const bloquear = bq.dataset.ativo==='1';
     if(bloquear && bq.dataset.arm!=='1'){ bq.dataset.arm='1'; bq.textContent='Confirmar bloqueio'; setTimeout(()=>{ if(bq.isConnected){ bq.dataset.arm=''; bq.textContent='Bloquear'; } },3500); return; }
@@ -3679,13 +3702,34 @@ pdRender();
     try{ await chamar(bloquear?'bloquear':'desbloquear', {id:bq.dataset.bloq}); toast(bloquear?'Acesso bloqueado.':'Acesso liberado.'); admRender(); }
     catch(err){ bq.disabled=false; toast(err.message, true); }
   });
+  function senhaProvisoria(){
+    const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789', a=new Uint32Array(10); crypto.getRandomValues(a);
+    return Array.from(a, n=>c[n % c.length]).join('');
+  }
+  $('adSenha').value = senhaProvisoria();
+  $('adGerar').addEventListener('click', ()=>{ $('adSenha').value = senhaProvisoria(); });
+  function mostrarCredenciais(nome, email, senha){
+    const pn = (nome||'').split(/\s+/)[0] || '';
+    const txt = `Olá${pn?', '+pn:''}! Seu acesso ao Painel ARVIA está pronto.\n\nEndereço: ${REDIRECT}\nE-mail: ${email}\nSenha provisória: ${senha}\n\nNo primeiro acesso, o painel pede para você criar a sua própria senha.`;
+    $('adCred').innerHTML = `<div class="ad-cred" role="status"><b>Acesso criado para ${esc(email)}.</b> Envie estes dados ao consultor:<pre>${esc(txt)}</pre><div class="acts"><button class="btn btn-outline btn-sm" type="button" id="adCopiar">Copiar mensagem</button><button class="btn btn-whatsapp btn-sm" type="button" id="adZap">Enviar pelo WhatsApp</button><button class="btn btn-outline btn-sm" type="button" id="adOk">Fechar</button></div></div>`;
+    $('adCopiar').onclick = async ()=>{ try{ await navigator.clipboard.writeText(txt); toast('Mensagem copiada.'); }catch(e){ toast('Não consegui copiar; selecione o texto.', true); } };
+    $('adZap').onclick = ()=>{ window.open('https://wa.me/?text='+encodeURIComponent(txt), '_blank'); };
+    $('adOk').onclick = ()=>{ $('adCred').innerHTML=''; };
+  }
+  $('adCriar').addEventListener('click', async ()=>{
+    const nome=$('adNome').value.trim(), email=$('adEmail').value.trim().toLowerCase(), senha=$('adSenha').value.trim();
+    if(!email) return toast('Informe o e-mail do consultor.', true);
+    if(senha.length<8) return toast('A senha provisória precisa ter pelo menos 8 caracteres.', true);
+    const b=$('adCriar'); b.disabled=true; b.textContent='Criando...';
+    try{ await chamar('criar', {nome, email, senha}); $('adNome').value=''; $('adEmail').value=''; $('adSenha').value=senhaProvisoria(); mostrarCredenciais(nome, email, senha); admRender(); }
+    catch(err){ toast(err.message, true); }
+    b.disabled=false; b.textContent='Criar acesso';
+  });
   $('adConvidar').addEventListener('click', async ()=>{
     const nome=$('adNome').value.trim(), email=$('adEmail').value.trim();
-    if(!email) return toast('Informe o e-mail do consultor.', true);
-    const b=$('adConvidar'); b.disabled=true; b.textContent='Enviando...';
+    if(!email) return toast('Informe o e-mail do consultor no campo acima.', true);
     try{ await chamar('convidar', {nome, email}); $('adNome').value=''; $('adEmail').value=''; toast(`Convite enviado para ${email}.`); admRender(); }
-    catch(err){ toast(err.message, true); }
-    b.disabled=false; b.textContent='Enviar convite';
+    catch(err){ toast(/not authorized|authorized/i.test(err.message) ? 'O e-mail padrão do Supabase só envia para a sua equipe. Use "Criar acesso" com senha provisória.' : err.message, true); }
   });
 })();
 </script>

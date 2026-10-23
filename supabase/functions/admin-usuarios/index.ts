@@ -44,6 +44,32 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (acao === "criar") {
+      const email = String(body.email ?? "").trim().toLowerCase();
+      const nome = String(body.nome ?? "").trim();
+      const senha = String(body.senha ?? "");
+      if (!/^\S+@\S+\.\S+$/.test(email)) return json({ erro: "E-mail inválido." }, 400);
+      if (senha.length < 8) return json({ erro: "A senha provisória precisa ter pelo menos 8 caracteres." }, 400);
+      const { data, error } = await admin.auth.admin.createUser({
+        email, password: senha, email_confirm: true, user_metadata: { nome, trocar_senha: true },
+      });
+      if (error) {
+        const ja = /already|registered|exists/i.test(error.message);
+        return json({ erro: ja ? "Já existe um acesso com esse e-mail." : error.message }, 400);
+      }
+      if (nome && data?.user) await admin.from("profiles").update({ nome }).eq("id", data.user.id);
+      return json({ ok: true });
+    }
+
+    if (acao === "nova_senha") {
+      const id = String(body.id ?? "");
+      const senha = String(body.senha ?? "");
+      if (!id || senha.length < 8) return json({ erro: "Dados inválidos." }, 400);
+      const { error } = await admin.auth.admin.updateUserById(id, { password: senha, user_metadata: { trocar_senha: true } });
+      if (error) return json({ erro: error.message }, 400);
+      return json({ ok: true });
+    }
+
     if (acao === "bloquear" || acao === "desbloquear") {
       const id = String(body.id ?? "");
       if (!id) return json({ erro: "Usuário não informado." }, 400);
