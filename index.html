@@ -24,7 +24,7 @@
 (function(){
   var cfg = window.ARVIA_CFG || {};
   window.ARVIA_ON = !!(cfg.url && cfg.key && window.supabase && window.supabase.createClient);
-  window.ARVIA_CHAVES = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia'];
+  window.ARVIA_CHAVES = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia','enviosAssembleia','envFiltroAssembleia','prefEnvio'];
   window.ARVIA_HASH = location.hash || '';
   if(!window.ARVIA_ON) return;
   document.documentElement.classList.add('arvia-locked');
@@ -636,7 +636,12 @@
   .pd-fila-acts { display:flex; flex-wrap:wrap; gap:8px; }
   .pd-fila .btn-outline { background:transparent; color:#F5F1E8; border-color:rgba(245,241,232,.35); }
   .pd-fila .btn-gold { background:var(--ouro); border-color:var(--ouro); color:var(--bordo-abs); font-weight:600; }
-  .pd-card.atual { outline:2px solid var(--ouro); outline-offset:2px; }
+  .pd-card.atual, .client-card.atual { outline:2px solid var(--ouro); outline-offset:2px; }
+  .client-card.sent { opacity:.62; }
+  .client-card.sent .client-name::after { content:' · enviada'; font-family:var(--fonte); font-size:12px; font-weight:500; color:var(--verde-mid); }
+  .env-filtros { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .env-filtros .rd-filter { margin-bottom:0; }
+  .env-prog { font-size:12.5px; color:var(--texto-sec); font-variant-numeric:tabular-nums; }
   body.pd-fila-on { padding-bottom:150px; }
   body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
@@ -836,7 +841,25 @@
         <button class="view-toggle-btn" onclick="setViewMode('imoveis','individual',this)">🎫 Por cota</button>
       </div>
       <button class="btn btn-outline" onclick="abrirModal('imoveis')">+ Adicionar cliente</button>
-      <button class="btn btn-primary" onclick="copiarTodas('imoveis')">Copiar todas as mensagens</button>
+      <button class="btn btn-outline" onclick="copiarTodas('imoveis')">Copiar todas as mensagens</button>
+    </div>
+
+    <div class="pd-filabar">
+      <p>Modo fila: o painel abre a conversa de cada cliente com o resultado pronto. Você envia no WhatsApp, volta aqui e toca em "Enviei, próximo". Contemplados primeiro.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="sel-modo" aria-label="Abrir conversas em">
+          <option value="web">WhatsApp Web</option>
+          <option value="app">App do WhatsApp (computador)</option>
+          <option value="celular">Celular</option>
+        </select>
+        <button class="btn btn-primary" onclick="envIniciarFila('imoveis')">▶ Iniciar fila</button>
+      </div>
+    </div>
+    <div class="env-filtros">
+      <div class="rd-filter" id="envFiltroImoveis">
+        <button data-v="pend">A enviar</button><button data-v="sent">Enviadas</button><button data-v="all">Todas</button>
+      </div>
+      <span class="env-prog" id="envProgImoveis"></span>
     </div>
 
     <!-- Client list -->
@@ -905,7 +928,25 @@
         <button class="view-toggle-btn" onclick="setViewMode('veiculos','individual',this)">🎫 Por cota</button>
       </div>
       <button class="btn btn-outline" onclick="abrirModal('veiculos')">+ Adicionar cliente</button>
-      <button class="btn btn-primary" onclick="copiarTodas('veiculos')">Copiar todas as mensagens</button>
+      <button class="btn btn-outline" onclick="copiarTodas('veiculos')">Copiar todas as mensagens</button>
+    </div>
+
+    <div class="pd-filabar">
+      <p>Modo fila: o painel abre a conversa de cada cliente com o resultado pronto. Você envia no WhatsApp, volta aqui e toca em "Enviei, próximo". Contemplados primeiro.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select class="sel-modo" aria-label="Abrir conversas em">
+          <option value="web">WhatsApp Web</option>
+          <option value="app">App do WhatsApp (computador)</option>
+          <option value="celular">Celular</option>
+        </select>
+        <button class="btn btn-primary" onclick="envIniciarFila('veiculos')">▶ Iniciar fila</button>
+      </div>
+    </div>
+    <div class="env-filtros">
+      <div class="rd-filter" id="envFiltroVeiculos">
+        <button data-v="pend">A enviar</button><button data-v="sent">Enviadas</button><button data-v="all">Todas</button>
+      </div>
+      <span class="env-prog" id="envProgVeiculos"></span>
     </div>
     <div class="client-grid" id="listaVeiculos"></div>
   </div>
@@ -1098,7 +1139,7 @@
   <div class="pd-filabar" id="pdFilaBar">
     <p>Modo fila: o painel abre a conversa de cada cliente com a mensagem pronta. Você envia no WhatsApp, volta aqui e toca em "Enviei, próximo".</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-      <select id="pdModo" aria-label="Abrir conversas em">
+      <select id="pdModo" class="sel-modo" aria-label="Abrir conversas em">
         <option value="web">WhatsApp Web</option>
         <option value="app">App do WhatsApp (computador)</option>
         <option value="celular">Celular</option>
@@ -1107,21 +1148,6 @@
     </div>
   </div>
   <div class="pd-grid" id="pdLista"></div>
-  <div class="pd-fila" id="pdFila" hidden>
-    <div class="pd-fila-in">
-      <div class="pd-fila-info">
-        <div class="pd-fila-cont" id="pdFilaCont"></div>
-        <div class="pd-fila-nome" id="pdFilaNome"></div>
-        <div class="pd-fila-bar"><i id="pdFilaProg"></i></div>
-      </div>
-      <div class="pd-fila-acts">
-        <button class="btn btn-outline btn-sm" id="pdFilaReabrir">Abrir de novo</button>
-        <button class="btn btn-outline btn-sm" id="pdFilaPular">Pular</button>
-        <button class="btn btn-outline btn-sm" id="pdFilaParar">Parar</button>
-        <button class="btn btn-gold" id="pdFilaProx">✓ Enviei, próximo</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- TAB ACESSOS (admin) -->
@@ -1150,6 +1176,22 @@
 </div>
 
 </main>
+<div class="pd-fila" id="filaBar" hidden>
+  <div class="pd-fila-in">
+    <div class="pd-fila-info">
+      <div class="pd-fila-cont" id="filaCont"></div>
+      <div class="pd-fila-nome" id="filaNome"></div>
+      <div class="pd-fila-bar"><i id="filaProg"></i></div>
+    </div>
+    <div class="pd-fila-acts">
+      <button class="btn btn-outline btn-sm" id="filaReabrir">Abrir de novo</button>
+      <button class="btn btn-outline btn-sm" id="filaPular">Pular</button>
+      <button class="btn btn-outline btn-sm" id="filaParar">Parar</button>
+      <button class="btn btn-gold" id="filaProx">✓ Enviei, próximo</button>
+    </div>
+  </div>
+</div>
+
 <footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span></footer>
 
 <!-- MODAL IMPORTAÇÃO — MAPEAMENTO DE COLUNAS -->
@@ -1683,21 +1725,28 @@ function renderClientesUnificado(seg){
   const tagLabel = seg==='imoveis' ? '🏠 Imóveis' : '🚗 Veículos';
   const s = (document.getElementById(searchId)?.value||'').toLowerCase();
 
-  const agrupados = agruparClientes(clientes);
+  const env = envSeg(seg), fs = envFiltro[seg] || 'pend';
+  const agrupados = envOrdenados(seg);
+  const nEnv = agrupados.filter(c=>env.sent[chaveCliente(c)]).length;
+  const progEl = document.getElementById('envProg'+(seg==='imoveis'?'Imoveis':'Veiculos'));
+  if(progEl) progEl.textContent = agrupados.length ? `${nEnv} de ${agrupados.length} mensagens enviadas` : '';
+  document.querySelectorAll('#envFiltro'+(seg==='imoveis'?'Imoveis':'Veiculos')+' button').forEach(b=>b.classList.toggle('active', b.dataset.v===fs));
 
   const filtered = agrupados.filter(cli =>
-    !s ||
+    (fs==='all' || (fs==='sent') === !!env.sent[chaveCliente(cli)]) && (!s ||
     cli.nome.toLowerCase().includes(s) ||
     cli.tel.includes(s) ||
-    cli.cotas.some(cotaObj => cotaObj.grupo.includes(s) || cotaObj.cota.includes(s))
+    cli.cotas.some(cotaObj => cotaObj.grupo.includes(s) || cotaObj.cota.includes(s)))
   );
 
   const list = document.getElementById(listId);
-  if(!filtered.length){ list.innerHTML='<p class="no-results">Nenhum cliente encontrado.</p>'; return; }
+  if(!filtered.length){ list.innerHTML = `<p class="no-results">${!s && fs==='pend' && agrupados.length ? 'Todas as mensagens desta assembleia já foram enviadas.' : 'Nenhum cliente encontrado.'}</p>`; if(FILA) filaUI(); return; }
 
   list.innerHTML = filtered.map((cli,i)=>{
     const av = cor(i);
-    const msg = buildMsgUnificada(cli, seg);
+    const k = chaveCliente(cli), enviada = !!env.sent[k];
+    const editada = !!(env.edit[k] && env.edit[k].base===buildMsgUnificada(cli, seg));
+    const msg = envMsg(seg, cli);
     const multiCota = cli.cotas.length > 1;
     const algumaContemplada = cli.cotas.some(cotaObj => statusDaCota(grupos[cotaObj.grupo], cotaObj).contemplada);
     const gruposUnicos = [...new Set(cli.cotas.map(c=>c.grupo))];
@@ -1718,7 +1767,7 @@ function renderClientesUnificado(seg){
     }).join('');
 
     return `
-    <div class="client-card" id="${seg}card${i}">
+    <div class="client-card${enviada?' sent':''}" id="${seg}card${i}" data-k="${rdEsc(k)}">
       <div class="client-header" onclick="toggleCard('${seg}',${i})">
         <div class="client-left">
           <div class="avatar" style="background:${av.bg};color:${av.txt}">${initials(cli.nome)}</div>
@@ -1739,17 +1788,18 @@ function renderClientesUnificado(seg){
           <span class="info-pill">📞 ${cli.tel}</span>
         </div>
         <div style="margin-bottom:12px;">${linhasCotaHtml}</div>
-        <div class="msg-preview" id="${seg}msg${i}">${msg}</div>
-        <div class="action-row">
-          <button class="btn btn-whatsapp btn-sm" onclick="abrirWhatsApp('${cli.tel}', document.getElementById('${seg}msg${i}').textContent)">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Enviar via WhatsApp
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="copiarMsg('${seg}',${i},this)">Copiar mensagem</button>
+        <textarea class="pd-msg env-msg" id="${seg}msg${i}" aria-label="Mensagem para ${rdEsc(cli.nome)}">${rdEsc(msg)}</textarea>
+        <div class="pd-acts" style="margin-top:10px;">
+          <button class="btn btn-outline btn-sm" data-env="copiar">Copiar</button>
+          <button class="btn btn-whatsapp btn-sm" data-env="wa">Abrir no WhatsApp</button>
+          ${editada?'<button class="btn btn-outline btn-sm" data-env="restaurar">Voltar ao texto original</button>':''}
+          <span class="sp"></span>
+          <button class="btn ${enviada?'btn-outline':'btn-primary'} btn-sm" data-env="enviada">${enviada?'Desfazer':'Marcar enviada'}</button>
         </div>
       </div>
     </div>`;
   }).join('');
+  if(FILA) filaUI();
 }
 
 function renderClientesIndividual(seg){
@@ -1811,7 +1861,7 @@ function renderClientesIndividual(seg){
         </div>
         <div class="msg-preview" id="${seg}msg${i}">${msg}</div>
         <div class="action-row">
-          <button class="btn btn-whatsapp btn-sm" onclick="abrirWhatsApp('${c.tel}', document.getElementById('${seg}msg${i}').textContent)">
+          <button class="btn btn-whatsapp btn-sm" onclick="envAbrirConversa('${c.tel}', document.getElementById('${seg}msg${i}').textContent)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Enviar via WhatsApp
           </button>
@@ -1831,7 +1881,7 @@ function toggleCard(seg,i){
 }
 
 function copiarMsg(seg,i,btn){
-  const txt = document.getElementById(seg+'msg'+i).textContent;
+  const el = document.getElementById(seg+'msg'+i); const txt = el.value !== undefined ? el.value : el.textContent;
   navigator.clipboard.writeText(txt).then(()=>{
     btn.textContent='Copiada!'; setTimeout(()=>btn.textContent='Copiar mensagem',2000);
   });
@@ -1847,7 +1897,7 @@ function copiarTodas(seg){
     const agrupados = agruparClientes(clientes);
     txt = agrupados.map(cli=>{
       const gruposStr = [...new Set(cli.cotas.map(c=>c.grupo))].join(', ');
-      return `=== ${cli.nome} | Grupo(s) ${gruposStr} | ${cli.tel} ===\n${buildMsgUnificada(cli,seg)}`;
+      return `=== ${cli.nome} | Grupo(s) ${gruposStr} | ${cli.tel} ===\n${envMsg(seg,cli)}`;
     }).join('\n\n---\n\n');
   }
   navigator.clipboard.writeText(txt).then(()=>toast('Todas as mensagens copiadas!'));
@@ -2552,7 +2602,7 @@ document.getElementById('rdBtnLance').addEventListener('click',()=>{
 
 
 // ─── BACKUP E REDEFINIÇÃO ────────────────────────────────────────────────────
-const CHAVES_DADOS = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia'];
+const CHAVES_DADOS = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia','enviosAssembleia','envFiltroAssembleia','prefEnvio'];
 const MAT_ROTULO = {propria:'13581', gestores:'Gestores', atendimento:'Atendimento'};
 function baixarBackupClientes(){
   const linhas = [['Nome','Telefone','Grupo','Cota','Valor','Segmento','Matrícula']];
@@ -2591,6 +2641,7 @@ async function redefinirTudo(){
 let pd = load('parcelasEmDia', {open:[], sent:{}, ver:{}, edit:{}, atr:{}, tel:{}, cfg:{venc:'', ass:'', ia:false}, ft:'all', fs:'pend'});
 pd.cfg = Object.assign({venc:'', ass:'', ia:false}, pd.cfg||{});
 ['sent','ver','edit','atr','tel'].forEach(k=>{ if(!pd[k]) pd[k]={}; });
+if(!Array.isArray(pd.open)) pd.open=[]; if(!pd.ft) pd.ft='all'; if(!pd.fs) pd.fs='pend';
 function pdSave(){ save('parcelasEmDia', pd); }
 const pdDig = s => String(s??'').replace(/\D/g,'');
 const pdNorm = s => String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
@@ -2812,44 +2863,111 @@ function pdVisiveis(cards, fs){
   }).sort((a,b)=>(b.cancel-a.cancel) || ((pd.atr[b.key]||b.atraso)-(pd.atr[a.key]||a.atraso)) || a.nome.localeCompare(b.nome));
 }
 
-// ─── MODO FILA ───
-let pdFila = null; // {keys:[], i:0}
-function pdAbrirConversa(tel, msg){
-  const num = pdWa(tel); if(!num) return;
-  const t = encodeURIComponent(msg), modo = pd.modo || 'web';
+// ─── ENVIO PELO WHATSAPP E MODO FILA (compartilhado pelas abas) ───
+let prefEnvio = load('prefEnvio', null);
+if(!prefEnvio || !prefEnvio.modo) prefEnvio = {modo: (typeof pd!=='undefined' && pd.modo) || ((window.matchMedia && matchMedia('(pointer:coarse)').matches) ? 'celular' : 'web')};
+function envModo(v){ if(v){ prefEnvio.modo=v; save('prefEnvio', prefEnvio); } document.querySelectorAll('.sel-modo').forEach(s=>s.value=prefEnvio.modo); return prefEnvio.modo; }
+function envAbrirConversa(tel, msg){
+  let num = String(tel||'').replace(/\D/g,''); if(num.length===10||num.length===11) num='55'+num;
+  if(!num) return toast('Cliente sem WhatsApp cadastrado.', true);
+  const t = encodeURIComponent(msg), modo = prefEnvio.modo || 'web';
   const url = modo==='app' ? `whatsapp://send?phone=${num}&text=${t}` : modo==='celular' ? `https://wa.me/${num}?text=${t}` : `https://web.whatsapp.com/send?phone=${num}&text=${t}`;
   if(modo==='app'){ location.href = url; return; }
-  const w = window.open(url, modo==='web' ? 'pdWhatsapp' : '_blank');
+  const w = window.open(url, modo==='web' ? 'arviaWhatsapp' : '_blank');
   if(!w){ const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove(); }
 }
-function pdFilaAtual(){ return pdFila ? PD_CARDS.find(c=>c.key===pdFila.keys[pdFila.i]) : null; }
-function pdFilaAbrir(){
-  const c = pdFilaAtual(); if(!c) return;
-  pdAbrirConversa(pd.tel[c.key]||c.tel, pd.edit[c.key] ?? pdMsg(c).text);
+const pdAbrirConversa = envAbrirConversa;
+// fonte: { keys:[], item(k)->{nome,tel,msg}, enviado(k), marcar(k), render(), el(k) }
+let FILA = null;
+function filaIniciar(fonte){
+  const keys = fonte.keys.filter(k=>{ const it=fonte.item(k); return it && String(it.tel||'').replace(/\D/g,'').length>=10; });
+  const sem = fonte.keys.length - keys.length;
+  if(!keys.length) return toast(sem ? 'Os clientes pendentes estão sem WhatsApp cadastrado.' : 'Não há mensagens pendentes neste filtro.', true);
+  FILA = Object.assign({}, fonte, {keys, i:0});
+  filaAbrir(); filaUI();
+  if(sem) toast(`${sem} cliente(s) sem WhatsApp ficaram de fora da fila.`);
 }
-function pdFilaUI(){
-  const box = document.getElementById('pdFila');
-  const on = !!pdFila && pdFila.i < pdFila.keys.length;
+function filaItem(){ return FILA ? FILA.item(FILA.keys[FILA.i]) : null; }
+function filaAbrir(){ const it=filaItem(); if(it) envAbrirConversa(it.tel, it.msg); }
+function filaUI(){
+  const box = document.getElementById('filaBar');
+  const on = !!FILA && FILA.i < FILA.keys.length;
   box.hidden = !on; document.body.classList.toggle('pd-fila-on', on);
-  document.querySelectorAll('.pd-card.atual').forEach(e=>e.classList.remove('atual'));
+  document.querySelectorAll('.atual').forEach(e=>e.classList.remove('atual'));
   if(!on) return;
-  const c = pdFilaAtual(), n = pdFila.keys.length;
-  document.getElementById('pdFilaCont').textContent = `Cliente ${pdFila.i+1} de ${n}`;
-  document.getElementById('pdFilaNome').textContent = c ? c.nome : '';
-  document.getElementById('pdFilaProg').style.width = (pdFila.i/n*100)+'%';
-  document.getElementById('pdFilaProx').textContent = pdFila.i+1<n ? '✓ Enviei, próximo' : '✓ Enviei, concluir';
-  const art = c && document.querySelector(`.pd-card[data-k="${CSS.escape(c.key)}"]`);
-  if(art){ art.classList.add('atual'); try{ art.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }
+  const it = filaItem(), n = FILA.keys.length;
+  document.getElementById('filaCont').textContent = `${FILA.titulo||'Cliente'} ${FILA.i+1} de ${n}`;
+  document.getElementById('filaNome').textContent = it ? it.nome : '';
+  document.getElementById('filaProg').style.width = (FILA.i/n*100)+'%';
+  document.getElementById('filaProx').textContent = FILA.i+1<n ? '✓ Enviei, próximo' : '✓ Enviei, concluir';
+  const el = FILA.el && FILA.el(FILA.keys[FILA.i]);
+  if(el){ el.classList.add('atual'); try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){} }
 }
-function pdFilaAvancar(marcar){
-  if(!pdFila) return;
-  const c = pdFilaAtual();
-  if(marcar && c){ pd.sent[c.key] = true; pdSave(); }
-  pdFila.i++;
-  while(pdFila.i < pdFila.keys.length && pd.sent[pdFila.keys[pdFila.i]]) pdFila.i++;
-  pdRender();
-  if(pdFila.i >= pdFila.keys.length){ const t=pdFila.keys.length; pdFila=null; pdFilaUI(); toast(`Fila concluída: ${t} cliente(s).`); return; }
-  pdFilaAbrir(); pdFilaUI();
+function filaAvancar(marcar){
+  if(!FILA) return;
+  const k = FILA.keys[FILA.i];
+  if(marcar) FILA.marcar(k);
+  FILA.i++;
+  while(FILA.i < FILA.keys.length && FILA.enviado(FILA.keys[FILA.i])) FILA.i++;
+  FILA.render();
+  if(FILA.i >= FILA.keys.length){ const t=FILA.keys.length; FILA=null; filaUI(); toast(`Fila concluída: ${t} cliente(s).`); return; }
+  filaAbrir(); filaUI();
+}
+function filaParar(){ FILA=null; filaUI(); toast('Fila pausada. O que já foi enviado ficou marcado.'); }
+
+// ─── ENVIOS DO RESULTADO DA ASSEMBLEIA (Imóveis / Veículos) ───
+let envAss = load('enviosAssembleia', {});
+let envFiltro = load('envFiltroAssembleia', {imoveis:'pend', veiculos:'pend'});
+function envSeg(seg){
+  const d = seg==='imoveis' ? dataImoveis : dataVeiculos;
+  if(!envAss[seg] || envAss[seg].data !== d){ envAss[seg] = {data:d, sent:{}, edit:{}}; }
+  return envAss[seg];
+}
+function envSalvar(){ save('enviosAssembleia', envAss); }
+function envMsg(seg, cli){
+  const base = buildMsgUnificada(cli, seg), e = envSeg(seg).edit[chaveCliente(cli)];
+  return (e && e.base===base) ? e.texto : base;
+}
+function envOrdenados(seg){
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  const contemp = cli => cli.cotas.some(c=>statusDaCota(grupos[c.grupo], c).contemplada) ? 1 : 0;
+  return agruparClientes(seg==='imoveis' ? clientesImoveis : clientesVeiculos)
+    .sort((a,b)=>(contemp(b)-contemp(a)) || a.nome.localeCompare(b.nome));
+}
+function envIniciarFila(seg){
+  const e = envSeg(seg), lista = envOrdenados(seg), mapa = new Map(lista.map(c=>[chaveCliente(c), c]));
+  const grupos = seg==='imoveis' ? gruposImoveis : gruposVeiculos;
+  if(!Object.keys(grupos).length) toast('Atenção: o resultado da assembleia ainda não foi cadastrado neste segmento.', true);
+  if(envFiltro[seg]==='sent'){ envFiltro[seg]='pend'; save('envFiltroAssembleia', envFiltro); }
+  if(viewMode[seg]!=='unificado'){ const w=document.getElementById('viewToggle'+(seg==='imoveis'?'Imoveis':'Veiculos')); if(w) setViewMode(seg,'unificado', w.querySelectorAll('.view-toggle-btn')[0]); }
+  renderClientes(seg);
+  filaIniciar({
+    titulo: 'Cliente',
+    keys: lista.map(c=>chaveCliente(c)).filter(k=>!e.sent[k]),
+    item: k=>{ const c=mapa.get(k); return c && {nome:c.nome, tel:c.tel, msg:envMsg(seg,c)}; },
+    enviado: k=>!!envSeg(seg).sent[k],
+    marcar: k=>{ envSeg(seg).sent[k]=true; envSalvar(); },
+    render: ()=>renderClientes(seg),
+    el: k=>{ const card=document.querySelector(`#lista${seg==='imoveis'?'Imoveis':'Veiculos'} .client-card[data-k="${CSS.escape(k)}"]`); if(card){ const b=card.querySelector('.client-body'); if(b) b.classList.add('open'); } return card; }
+  });
+}
+function envAcao(seg, el, acao){
+  const card = el.closest('.client-card'), k = card.dataset.k;
+  const cli = envOrdenados(seg).find(c=>chaveCliente(c)===k); if(!cli) return;
+  const ta = card.querySelector('textarea.env-msg'), e = envSeg(seg);
+  if(acao==='copiar'){
+    const ok=()=>toast('Mensagem copiada.'), falha=()=>{ ta.select(); toast('Texto selecionado: copie com Ctrl+C'); };
+    try{ navigator.clipboard.writeText(ta.value).then(ok, falha); }catch(err){ falha(); }
+    return;
+  }
+  if(acao==='wa'){ envAbrirConversa(cli.tel, ta.value); return; }
+  if(acao==='enviada'){ e.sent[k] = !e.sent[k]; envSalvar(); if(e.sent[k]) toast('Marcada como enviada.'); renderClientes(seg); }
+  if(acao==='restaurar'){ delete e.edit[k]; envSalvar(); renderClientes(seg); }
+}
+function envEditar(seg, ta){
+  const k = ta.closest('.client-card').dataset.k;
+  const cli = envOrdenados(seg).find(c=>chaveCliente(c)===k); if(!cli) return;
+  envSeg(seg).edit[k] = {base: buildMsgUnificada(cli, seg), texto: ta.value}; envSalvar();
 }
 
 let PD_CARDS = [];
@@ -2900,7 +3018,7 @@ function pdRender(){
       </div>
     </article>`;
   }).join('');
-  if(pdFila) pdFilaUI();
+  if(FILA) filaUI();
 }
 
 (function pdInit(){
@@ -2935,23 +3053,20 @@ function pdRender(){
     pd.open=[]; pd.sent={}; pd.edit={}; pd.atr={}; pd.ver={}; pd.tel={}; pdSave(); pdRender(); rb.textContent='Limpar lista do mês'; toast('Lista do mês limpa.');
   });
 
-  const modoSel = document.getElementById('pdModo');
-  if(!pd.modo) pd.modo = (window.matchMedia && matchMedia('(pointer:coarse)').matches) ? 'celular' : 'web';
-  modoSel.value = pd.modo;
-  modoSel.addEventListener('change', ()=>{ pd.modo = modoSel.value; pdSave(); });
   document.getElementById('pdFilaIniciar').addEventListener('click', ()=>{
-    const fila = pdVisiveis(PD_CARDS, 'pend').filter(c=>pdWa(pd.tel[c.key]||c.tel));
-    const semTel = pdVisiveis(PD_CARDS, 'pend').length - fila.length;
-    if(!fila.length) return toast(semTel ? 'Os clientes pendentes estão sem WhatsApp. Digite o número no card.' : 'Não há mensagens pendentes neste filtro.', true);
     if(pd.fs==='sent'){ pd.fs='pend'; pdSave(); pdRender(); }
-    pdFila = {keys: fila.map(c=>c.key), i:0};
-    pdFilaAbrir(); pdFilaUI();
-    if(semTel) toast(`${semTel} cliente(s) sem WhatsApp ficaram de fora da fila.`);
+    const pend = pdVisiveis(PD_CARDS, 'pend');
+    const mapa = new Map(pend.map(c=>[c.key,c]));
+    filaIniciar({
+      titulo: 'Cliente',
+      keys: pend.map(c=>c.key),
+      item: k=>{ const c=mapa.get(k); return c && {nome:c.nome, tel:pd.tel[k]||c.tel, msg: pd.edit[k] ?? pdMsg(c).text}; },
+      enviado: k=>!!pd.sent[k],
+      marcar: k=>{ pd.sent[k]=true; pdSave(); },
+      render: pdRender,
+      el: k=>document.querySelector(`.pd-card[data-k="${CSS.escape(k)}"]`)
+    });
   });
-  document.getElementById('pdFilaProx').addEventListener('click', ()=>pdFilaAvancar(true));
-  document.getElementById('pdFilaPular').addEventListener('click', ()=>pdFilaAvancar(false));
-  document.getElementById('pdFilaReabrir').addEventListener('click', pdFilaAbrir);
-  document.getElementById('pdFilaParar').addEventListener('click', ()=>{ pdFila=null; pdFilaUI(); toast('Fila pausada. O que já foi enviado ficou marcado.'); });
 
   const selCli = document.getElementById('pdManCli');
   selCli.addEventListener('change', ()=>{ document.getElementById('pdOutro').hidden = selCli.value!=='outro'; });
@@ -3005,6 +3120,20 @@ function pdRender(){
     if(pdDig(e.target.value).length>=10){ pd.tel[k]=e.target.value; pdSave(); pdRender(); } else toast('Número incompleto: inclua o DDD.', true);
   });
 })();
+
+document.getElementById('filaProx').addEventListener('click', ()=>filaAvancar(true));
+document.getElementById('filaPular').addEventListener('click', ()=>filaAvancar(false));
+document.getElementById('filaReabrir').addEventListener('click', filaAbrir);
+document.getElementById('filaParar').addEventListener('click', filaParar);
+document.querySelectorAll('.sel-modo').forEach(sel=>sel.addEventListener('change', ()=>envModo(sel.value)));
+envModo();
+['imoveis','veiculos'].forEach(seg=>{
+  const box = document.getElementById('envFiltro'+(seg==='imoveis'?'Imoveis':'Veiculos'));
+  box.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; envFiltro[seg]=b.dataset.v; save('envFiltroAssembleia', envFiltro); renderClientes(seg); });
+  const lista = document.getElementById('lista'+(seg==='imoveis'?'Imoveis':'Veiculos'));
+  lista.addEventListener('click', e=>{ const b=e.target.closest('[data-env]'); if(b){ e.stopPropagation(); envAcao(seg, b, b.dataset.env); } });
+  lista.addEventListener('input', e=>{ if(e.target.matches('textarea.env-msg')) envEditar(seg, e.target); });
+});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('dataAssembleia').value = dataImoveis;
