@@ -106,7 +106,14 @@ drop policy if exists "dados: apagar os próprios" on public.user_data;
 create policy "dados: apagar os próprios" on public.user_data
   for delete to authenticated using (user_id = auth.uid() and public.is_ativo());
 
--- 6) Sinal de vida (evita que o projeto grátis pause por inatividade) --------
+-- 6) Permissões explícitas (funciona mesmo com "Expor automaticamente novas tabelas" desligado)
+grant usage on schema public to anon, authenticated;
+revoke all on public.profiles, public.user_data from anon;
+grant select, update on public.profiles to authenticated;
+grant select, insert, update, delete on public.user_data to authenticated;
+grant execute on function public.is_admin(), public.is_ativo() to authenticated;
+
+-- 7) Sinal de vida (evita que o projeto grátis pause por inatividade) --------
 create or replace function public.ping() returns text
 language sql security definer set search_path = public as $$ select 'ok'::text $$;
 grant execute on function public.ping() to anon, authenticated;
