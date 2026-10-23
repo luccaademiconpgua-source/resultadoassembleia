@@ -662,6 +662,45 @@
   .arvia-copy { flex-basis:100%; margin:8px 0 0; font-size:11px; line-height:1.5; color:var(--texto-sec); }
   .arvia-copy strong { font-weight:600; }
   .ax-copy { margin:4px 0 0; font-size:10.5px; line-height:1.5; color:var(--texto-sec); text-align:center; }
+  /* ─── CRM ─── */
+  .crm-top { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .crm-top input, .crm-top select { padding:8px 10px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); background:#fff; color:var(--texto); }
+  .crm-top input { min-width:220px; flex:1; }
+  .crm-etapas { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .crm-etapas button { border:1px solid var(--cinza-borda); background:#fff; border-radius:16px; padding:6px 12px; font-size:12.5px; cursor:pointer; display:inline-flex; gap:6px; align-items:center; font-family:var(--fonte); color:var(--texto); }
+  .crm-etapas button.active { background:var(--verde); color:#F5F1E8; border-color:var(--verde); }
+  .crm-etapas .n { font-variant-numeric:tabular-nums; font-weight:600; font-size:11.5px; background:var(--cinza-bg); color:var(--texto); border-radius:9px; padding:0 7px; }
+  .crm-etapas button.active .n { background:rgba(255,255,255,.18); color:#F5F1E8; }
+  .crm-lista { display:grid; gap:10px; }
+  .crm-card { background:#fff; border:1px solid var(--cinza-borda); border-left:4px solid var(--cinza-borda); border-radius:var(--radius); min-width:0; }
+  .crm-card[data-st="novo"] { border-left-color:var(--ouro); }
+  .crm-card[data-st="contato"] { border-left-color:#3B6EA5; }
+  .crm-card[data-st="proposta"] { border-left-color:#8A5BB5; }
+  .crm-card[data-st="fechado"] { border-left-color:#2E7D4F; }
+  .crm-card[data-st="perdido"] { border-left-color:#9A8F8B; opacity:.8; }
+  .crm-head { display:flex; gap:10px 14px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:12px 16px; cursor:pointer; }
+  .crm-head:focus-visible { outline:2px solid var(--ouro); outline-offset:-2px; }
+  .crm-nome { font-family:var(--display); font-size:20px; font-weight:600; color:var(--verde); line-height:1.15; }
+  .crm-sub { font-size:12px; color:var(--texto-sec); display:flex; gap:10px; flex-wrap:wrap; font-variant-numeric:tabular-nums; }
+  .crm-tags { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .crm-st { font-size:11px; font-weight:600; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+  .crm-st.novo { background:var(--laranja-light); color:#7A5A12; }
+  .crm-st.contato { background:#E6EEF7; color:#24476E; }
+  .crm-st.proposta { background:#F0E8F7; color:#5B3A7A; }
+  .crm-st.fechado { background:#E3F1E7; color:#1F5C38; }
+  .crm-st.perdido { background:var(--cinza-bg); color:var(--texto-sec); }
+  .crm-body { border-top:1px solid var(--cinza-borda); padding:14px 16px; display:grid; gap:12px; }
+  .crm-body[hidden] { display:none; }
+  .crm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:8px 16px; font-size:13px; }
+  .crm-grid dt { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--texto-sec); }
+  .crm-grid dd { margin:0 0 4px; overflow-wrap:anywhere; }
+  .crm-ctrl { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+  .crm-ctrl label, .crm-notas label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
+  .crm-ctrl select, .crm-notas textarea { width:100%; padding:8px 10px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); background:#fff; color:var(--texto); }
+  .crm-notas textarea { min-height:80px; resize:vertical; }
+  .crm-acts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .crm-acts .sp { flex:1; }
+  .crm-vazio { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:26px; text-align:center; color:var(--texto-sec); font-size:13px; }
   /* ─── ACESSO / LOGIN ─── */
   html.arvia-locked body > header, html.arvia-locked body > main, html.arvia-locked body > footer { display:none !important; }
   .ax-gate { position:fixed; inset:0; z-index:400; background:radial-gradient(120% 90% at 20% 0%, #4A0D18 0%, var(--bordo-abs) 60%); display:flex; align-items:center; justify-content:center; padding:calc(24px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow-y:auto; }
@@ -786,6 +825,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('parcelas',this)">
       📑 Parcelas em Dia <span class="count" id="countParcelasTab">0</span>
+    </button>
+    <button class="tab-btn" id="tabBtnCrm" onclick="switchTab('crm',this)" hidden>
+      🗂️ CRM <span class="count" id="countCrmTab">0</span>
     </button>
     <a class="tab-btn tab-link" href="cadastro.html">
       📝 Cadastro de venda
@@ -1170,6 +1212,21 @@
   <div class="pd-grid" id="pdLista"></div>
 </div>
 
+<!-- TAB CRM (leads do site) -->
+<div class="tab-panel" id="tab-crm">
+  <div class="stats-row" id="crmStats"></div>
+  <div class="crm-top">
+    <input type="search" id="crmBusca" placeholder="Buscar por nome, WhatsApp, e-mail ou objetivo..." aria-label="Buscar leads"/>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select id="crmResp" aria-label="Filtrar por responsável" hidden></select>
+      <button class="btn btn-outline btn-sm" id="crmAtualizar">Atualizar</button>
+    </div>
+  </div>
+  <div class="crm-etapas" id="crmEtapas" role="group" aria-label="Etapa do funil"></div>
+  <div class="crm-lista" id="crmLista"><div class="crm-vazio">Carregando leads...</div></div>
+  <div class="hint">💡 Os leads chegam sozinhos pelo formulário do site. Novos aparecem em dourado. Mude a etapa conforme a conversa avança e use as notas para registrar o que foi combinado.</div>
+</div>
+
 <!-- TAB ACESSOS (admin) -->
 <div class="tab-panel" id="tab-acessos">
   <div class="assembleia-box">
@@ -1460,6 +1517,7 @@ function switchTab(id, btn){
   if(id==='radar') rdRender(true);
   if(id==='parcelas') pdRender();
   if(id==='acessos' && window.admRender) admRender();
+  if(id==='crm' && window.crmRender) crmRender();
   try{ btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); }catch(e){}
 }
 
@@ -3329,6 +3387,7 @@ pdRender();
       $('axSair').addEventListener('click', sair);
     }
     if(PERFIL.role==='admin'){ $('tabBtnAcessos').hidden = false; }
+    $('tabBtnCrm').hidden = false; crmCarregar(true);
     if(typeof pdRender==='function') try{ pdRender(); }catch(e){}
   }
 
@@ -3402,6 +3461,148 @@ pdRender();
     if(session){ history.replaceState(null,'',REDIRECT); return entrar(session.user); }
     tela('axLogin');
   })();
+
+
+  // ─── CRM DE LEADS ───
+  const ETAPAS = [['novo','Novos'],['contato','Em contato'],['proposta','Proposta enviada'],['fechado','Fechados'],['perdido','Perdidos']];
+  const ETAPA_NOME = Object.fromEntries(ETAPAS.map(([k,n])=>[k, {novo:'Novo',contato:'Em contato',proposta:'Proposta enviada',fechado:'Fechado',perdido:'Perdido'}[k]]));
+  const ORIGEM = {'formulario-consultoria':'Formulário do site','site':'Site','calculadora':'Calculadora','manual':'Cadastro manual'};
+  let CRM = { leads:[], perfis:[], etapa:'novo', aberto:null, ultimoNovos:null, carregado:false };
+  try{ const e = localStorage.getItem('crmEtapa'); if(e) CRM.etapa = e; }catch(e){}
+  const quando = iso => { const d=new Date(iso), m=Math.round((Date.now()-d)/60000); if(m<1) return 'agora'; if(m<60) return `há ${m} min`; const h=Math.round(m/60); if(h<24) return `há ${h} h`; const dd=Math.round(h/24); if(dd<7) return `há ${dd} dia${dd>1?'s':''}`; return d.toLocaleDateString('pt-BR'); };
+  const nomePerfil = id => { const p = CRM.perfis.find(x=>x.id===id); return p ? (p.nome||p.email) : 'Sem responsável'; };
+  function crmMsg(l){
+    const pn = String(l.nome||'').trim().split(/\s+/)[0].replace(/^./,c=>c.toUpperCase());
+    const eu = window.ARVIA_PRIMEIRO_NOME || 'Lucca';
+    const obj = l.objetivo ? ` sobre o seu objetivo de *${String(l.objetivo).toLowerCase()}*` : '';
+    return `Olá, ${pn}! Tudo bem? Aqui é o ${eu}, da ARVIA Capital, parceiro autorizado Ademicon.\n\nRecebi as suas respostas no formulário${obj} e já comecei a olhar o melhor caminho para você.\n\nPara eu montar uma simulação certeira, qual o melhor horário para conversarmos rapidinho por aqui ou por ligação?`;
+  }
+  async function crmCarregar(silencioso){
+    if(!USER) return;
+    const q = sb.from('leads').select('*').order('created_at', {ascending:false});
+    const [l, p] = await Promise.all([q, PERFIL.role==='admin' ? sb.from('profiles').select('id,nome,email,ativo').order('nome') : Promise.resolve({data:[PERFIL]})]);
+    if(l.error){
+      if(!silencioso){
+        const t = /relation|does not exist|schema cache|404/i.test(l.error.message||'') ? 'A tabela de leads ainda não foi criada no Supabase (rode o arquivo crm.sql no SQL Editor).' : traduz(l.error);
+        $('crmLista').innerHTML = `<div class="crm-vazio">${esc(t)}</div>`;
+      }
+      return;
+    }
+    const novos = l.data.filter(x=>x.status==='novo').length;
+    if(CRM.ultimoNovos!==null && novos>CRM.ultimoNovos) toast(`${novos-CRM.ultimoNovos} novo(s) lead(s) chegaram.`);
+    CRM.ultimoNovos = novos; CRM.leads = l.data; CRM.perfis = p.data||[]; CRM.carregado = true;
+    const b = $('countCrmTab'); if(b) b.textContent = novos;
+    crmRender();
+  }
+  function crmRender(){
+    if(!CRM.carregado) return;
+    const admin = PERFIL.role==='admin';
+    const busca = ($('crmBusca').value||'').toLowerCase().trim();
+    const sel = $('crmResp');
+    if(admin){
+      sel.hidden = false;
+      const v = sel.value || 'todos';
+      sel.innerHTML = `<option value="todos">Todos os responsáveis</option><option value="sem">Sem responsável</option>` + CRM.perfis.map(p=>`<option value="${esc(p.id)}">${esc(p.nome||p.email)}</option>`).join('');
+      sel.value = v;
+    }
+    const resp = admin ? (sel.value||'todos') : 'todos';
+    const base = CRM.leads.filter(l=>{
+      if(resp==='sem' && l.responsavel) return false;
+      if(resp!=='todos' && resp!=='sem' && l.responsavel!==resp) return false;
+      if(busca && ![l.nome,l.whatsapp,l.email,l.objetivo,l.segmento,l.notas].join(' ').toLowerCase().includes(busca)) return false;
+      return true;
+    });
+    const cont = Object.fromEntries(ETAPAS.map(([k])=>[k, base.filter(l=>l.status===k).length]));
+    $('crmEtapas').innerHTML = ETAPAS.map(([k,n])=>`<button type="button" data-et="${k}" class="${CRM.etapa===k?'active':''}" aria-pressed="${CRM.etapa===k}">${n} <span class="n">${cont[k]}</span></button>`).join('') + `<button type="button" data-et="todos" class="${CRM.etapa==='todos'?'active':''}" aria-pressed="${CRM.etapa==='todos'}">Todos <span class="n">${base.length}</span></button>`;
+    const total = CRM.leads.length, fech = CRM.leads.filter(l=>l.status==='fechado').length;
+    const semana = CRM.leads.filter(l=>Date.now()-new Date(l.created_at) < 7*864e5).length;
+    $('crmStats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Novos para atender</div><div class="stat-value">${CRM.leads.filter(l=>l.status==='novo').length}</div><div class="stat-sub">${CRM.leads.filter(l=>l.status==='novo' && !l.responsavel).length} sem responsável</div></div>
+      <div class="stat-card"><div class="stat-label">Chegaram em 7 dias</div><div class="stat-value">${semana}</div><div class="stat-sub">${total} no total</div></div>
+      <div class="stat-card"><div class="stat-label">Em negociação</div><div class="stat-value">${CRM.leads.filter(l=>l.status==='contato'||l.status==='proposta').length}</div><div class="stat-sub">em contato ou com proposta</div></div>
+      <div class="stat-card"><div class="stat-label">Fechados</div><div class="stat-value">${fech}</div><div class="stat-sub">${total ? Math.round(fech/total*100) : 0}% dos leads</div></div>`;
+    const lista = base.filter(l=>CRM.etapa==='todos' || l.status===CRM.etapa);
+    const el = $('crmLista');
+    if(!CRM.leads.length){ el.innerHTML = `<div class="crm-vazio">Nenhum lead ainda. Quando alguém preencher o formulário do site, ele aparece aqui na hora em que você atualizar.</div>`; return; }
+    if(!lista.length){ el.innerHTML = `<div class="crm-vazio">Nenhum lead nesta etapa${busca?' com essa busca':''}.</div>`; return; }
+    el.innerHTML = lista.map(l=>{
+      const q = l.qualificacao || {};
+      const aberto = CRM.aberto===l.id;
+      const qual = [['Mora de aluguel',q.aluguel],['Carro próprio',q.carro],['Quer empreender',q.empreender],['Guarda dinheiro',q.guardar]].filter(x=>x[1]);
+      return `<article class="crm-card" data-st="${esc(l.status)}" data-id="${esc(l.id)}">
+        <div class="crm-head" role="button" tabindex="0" aria-expanded="${aberto}">
+          <div style="min-width:0">
+            <div class="crm-nome">${esc(l.nome)}</div>
+            <div class="crm-sub"><span>${esc(l.whatsapp)}</span><span>${esc(l.segmento||'')}${l.valor_mensal?' · '+esc(l.valor_mensal):''}</span><span>${quando(l.created_at)}</span></div>
+          </div>
+          <div class="crm-tags"><span class="crm-st ${esc(l.status)}">${ETAPA_NOME[l.status]||esc(l.status)}</span>${admin?`<span class="rd-pill off">${esc(nomePerfil(l.responsavel))}</span>`:''}</div>
+        </div>
+        <div class="crm-body" ${aberto?'':'hidden'}>
+          <dl class="crm-grid">
+            <div><dt>Objetivo</dt><dd>${esc(l.objetivo||'—')}</dd></div>
+            <div><dt>E-mail</dt><dd>${esc(l.email||'—')}</dd></div>
+            <div><dt>Origem</dt><dd>${esc(ORIGEM[l.origem]||l.origem)}</dd></div>
+            <div><dt>Chegou em</dt><dd>${new Date(l.created_at).toLocaleString('pt-BR')}</dd></div>
+            ${qual.map(([k,v])=>`<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+            <div><dt>Consentimento LGPD</dt><dd>${l.consentimento?'Aceito em '+(l.consentimento_em?new Date(l.consentimento_em).toLocaleString('pt-BR'):'—'):'Não'}</dd></div>
+          </dl>
+          ${l.detalhe?`<div style="font-size:13px;background:var(--cinza-bg);border-radius:var(--radius-sm);padding:10px 12px;"><b>O que o lead escreveu:</b> ${esc(l.detalhe)}</div>`:''}
+          <div class="crm-ctrl">
+            <div><label for="crmSt-${esc(l.id)}">Etapa</label><select id="crmSt-${esc(l.id)}" data-campo="status">${ETAPAS.map(([k])=>`<option value="${k}" ${l.status===k?'selected':''}>${ETAPA_NOME[k]}</option>`).join('')}</select></div>
+            ${admin?`<div><label for="crmRp-${esc(l.id)}">Responsável</label><select id="crmRp-${esc(l.id)}" data-campo="responsavel"><option value="">Sem responsável</option>${CRM.perfis.filter(p=>p.ativo!==false).map(p=>`<option value="${esc(p.id)}" ${l.responsavel===p.id?'selected':''}>${esc(p.nome||p.email)}</option>`).join('')}</select></div>`:''}
+          </div>
+          <div class="crm-notas"><label for="crmNt-${esc(l.id)}">Notas</label><textarea id="crmNt-${esc(l.id)}" data-campo="notas" placeholder="Ex.: ligou dia 25, quer imóvel de 300 mil, retornar com simulação do grupo 12180">${esc(l.notas||'')}</textarea></div>
+          <div class="crm-acts">
+            <button class="btn btn-whatsapp btn-sm" data-crm="wa">Chamar no WhatsApp</button>
+            <button class="btn btn-outline btn-sm" data-crm="copiar">Copiar mensagem</button>
+            <span class="sp"></span>
+            ${admin?`<button class="btn btn-outline btn-sm" data-crm="excluir" style="color:#A93226">Excluir</button>`:''}
+          </div>
+        </div>
+      </article>`;
+    }).join('');
+  }
+  async function crmSalvar(id, campos, ok){
+    const l = CRM.leads.find(x=>x.id===id); if(!l) return;
+    const { error } = await sb.from('leads').update(campos).eq('id', id);
+    if(error){ toast('Não consegui salvar: '+traduz(error), true); return; }
+    Object.assign(l, campos);
+    if(ok) toast(ok);
+    CRM.ultimoNovos = CRM.leads.filter(x=>x.status==='novo').length;
+    const b = $('countCrmTab'); if(b) b.textContent = CRM.ultimoNovos;
+  }
+  window.crmRender = ()=>{ if(!CRM.carregado) crmCarregar(); else crmRender(); };
+  $('crmEtapas').addEventListener('click', e=>{ const b=e.target.closest('[data-et]'); if(!b) return; CRM.etapa=b.dataset.et; try{ localStorage.setItem('crmEtapa', CRM.etapa); }catch(err){} crmRender(); });
+  $('crmBusca').addEventListener('input', crmRender);
+  $('crmResp').addEventListener('change', crmRender);
+  $('crmAtualizar').addEventListener('click', ()=>crmCarregar());
+  $('crmLista').addEventListener('click', async e=>{
+    const card = e.target.closest('.crm-card'); if(!card) return;
+    const id = card.dataset.id, l = CRM.leads.find(x=>x.id===id);
+    if(e.target.closest('.crm-head')){ CRM.aberto = CRM.aberto===id ? null : id; crmRender(); return; }
+    const b = e.target.closest('[data-crm]'); if(!b || !l) return;
+    if(b.dataset.crm==='wa'){
+      envAbrirConversa(l.whatsapp, crmMsg(l));
+      if(l.status==='novo'){ await crmSalvar(id, {status:'contato', responsavel: l.responsavel || USER.id}, 'Lead movido para "Em contato".'); crmRender(); }
+      return;
+    }
+    if(b.dataset.crm==='copiar'){ try{ await navigator.clipboard.writeText(crmMsg(l)); toast('Mensagem copiada.'); }catch(err){ toast('Não consegui copiar neste navegador.', true); } return; }
+    if(b.dataset.crm==='excluir'){
+      if(b.dataset.arm!=='1'){ b.dataset.arm='1'; b.textContent='Confirmar exclusão'; setTimeout(()=>{ if(b.isConnected){ b.dataset.arm=''; b.textContent='Excluir'; } },3500); return; }
+      const { error } = await sb.from('leads').delete().eq('id', id);
+      if(error) return toast('Não consegui excluir: '+traduz(error), true);
+      CRM.leads = CRM.leads.filter(x=>x.id!==id); toast('Lead excluído.'); crmRender();
+    }
+  });
+  $('crmLista').addEventListener('keydown', e=>{ const h=e.target.closest('.crm-head'); if(h && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); h.click(); } });
+  $('crmLista').addEventListener('change', async e=>{
+    const c = e.target.dataset.campo; if(!c) return;
+    const id = e.target.closest('.crm-card').dataset.id;
+    if(c==='status'){ await crmSalvar(id, {status:e.target.value}, 'Etapa atualizada.'); crmRender(); }
+    if(c==='responsavel'){ await crmSalvar(id, {responsavel:e.target.value||null}, 'Responsável atualizado.'); crmRender(); }
+    if(c==='notas'){ await crmSalvar(id, {notas:e.target.value||null}, 'Notas salvas.'); }
+  });
+  setInterval(()=>{ if(USER && document.visibilityState==='visible') crmCarregar(true); }, 60000);
 
   // ─── ABA ACESSOS (admin) ───
   const fmtData = iso => { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };

@@ -301,7 +301,6 @@
 
 </main>
 
-<label class="cad-opt" for="cadPlanilha"><input type="checkbox" id="cadPlanilha" checked> Enviar também para a planilha do Google</label>
 <div class="bar">
   <button id="btn-copy" onclick="copyResumo()">Copiar resumo</button>
   <button id="btn-send" onclick="enviarCadastro()">Salvar cadastro</button>
@@ -320,7 +319,6 @@
   // CONFIGURAÇÃO — cole aqui a URL do seu Apps Script Web App
   // (instruções na mensagem de resposta)
   // ============================================================
-  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxbWmrmEGIdIFtnIiDv3_N-iB-SLwgsaJvPj0WqdeI2Won25Bcf16uuP6bD02tMKr6-/exec";
 
   // navegação do índice
   const idxBtns = document.querySelectorAll('.idx-btn');
@@ -471,11 +469,9 @@
     btn.disabled = true; btn.textContent = 'Salvando...';
     const payload = buildPayload();
     try{
-      if(window.sbc){
+      if(!window.sbc || !CAD_USER) throw new Error('sem login');
+      {
         await cadSalvar({ id: Date.now().toString(36), criadoEm: new Date().toISOString(), nome: val('nome'), cpf: val('cpf'), payload, resumo: buildResumo() });
-      }
-      if(document.getElementById('cadPlanilha').checked && !SHEET_WEBHOOK_URL.includes('COLE_AQUI')){
-        await fetch(SHEET_WEBHOOK_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(payload) });
       }
       showToast('Cadastro salvo ✓');
     }catch(err){
