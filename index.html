@@ -22,7 +22,7 @@
 <title>Painel de Assembleias ARVIA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -60,8 +60,8 @@
     --cinza-borda: #E5DCCB;
     --texto: #111111;
     --texto-sec: #6E5F5A;
-    --fonte: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --fonte: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --display: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --ouro: #C6A04A; --ouro-claro: #E1C16A; --bordo-abs: #25070D;
     --radius: 10px;
     --radius-sm: 6px;
@@ -655,6 +655,8 @@
   body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
   [hidden] { display:none !important; }
+  h1,h2,h3,h4,.logo-text,.stat-value,.rd-section-title,.pd-nome,.crm-nome,.ax-card h2,.arvia-word b { font-variation-settings:'wdth' 104; font-weight:700; letter-spacing:-.01em; }
+  .eyebrow,.stat-label,.rd-pill,.badge { font-variation-settings:'wdth' 84; }
   h1.logo-text { margin:0; }
   a.tab-link { text-decoration:none; display:inline-flex; align-items:center; }
   .assembleia-header[role=button]:focus-visible, .client-header:focus-visible { outline:2px solid var(--ouro); outline-offset:-2px; }
@@ -3466,7 +3468,7 @@ pdRender();
   // ─── CRM DE LEADS ───
   const ETAPAS = [['novo','Novos'],['contato','Em contato'],['proposta','Proposta enviada'],['fechado','Fechados'],['perdido','Perdidos']];
   const ETAPA_NOME = Object.fromEntries(ETAPAS.map(([k,n])=>[k, {novo:'Novo',contato:'Em contato',proposta:'Proposta enviada',fechado:'Fechado',perdido:'Perdido'}[k]]));
-  const ORIGEM = {'landing':'Site ARVIA (landing page)','formulario-consultoria':'Formulário de consultoria','site':'Site','calculadora':'Calculadora','manual':'Cadastro manual'};
+  const ORIGEM = {'links':'Link da bio (Instagram)','landing':'Site ARVIA (landing page)','formulario-consultoria':'Formulário de consultoria','site':'Site','calculadora':'Calculadora','manual':'Cadastro manual'};
   let CRM = { leads:[], perfis:[], etapa:'novo', aberto:null, ultimoNovos:null, carregado:false };
   try{ const e = localStorage.getItem('crmEtapa'); if(e) CRM.etapa = e; }catch(e){}
   const quando = iso => { const d=new Date(iso), m=Math.round((Date.now()-d)/60000); if(m<1) return 'agora'; if(m<60) return `há ${m} min`; const h=Math.round(m/60); if(h<24) return `há ${h} h`; const dd=Math.round(h/24); if(dd<7) return `há ${dd} dia${dd>1?'s':''}`; return d.toLocaleDateString('pt-BR'); };
@@ -3528,7 +3530,7 @@ pdRender();
     el.innerHTML = lista.map(l=>{
       const q = l.qualificacao || {};
       const aberto = CRM.aberto===l.id;
-      const qual = [['Mora de aluguel',q.aluguel],['Carro próprio',q.carro],['Quer empreender',q.empreender],['Guarda dinheiro',q.guardar]].filter(x=>x[1]);
+      const qual = [['Mora de aluguel',q.aluguel],['Carro próprio',q.carro],['Quer empreender',q.empreender],['Guarda dinheiro',q.guardar],['Pressa',q.pressa],['Lance disponível',q.lance],['Diagnóstico mostrado',q.diagnostico],['Veio de',q.trafego]].filter(x=>x[1]);
       return `<article class="crm-card" data-st="${esc(l.status)}" data-id="${esc(l.id)}">
         <div class="crm-head" role="button" tabindex="0" aria-expanded="${aberto}">
           <div style="min-width:0">
