@@ -23,7 +23,8 @@ Deno.serve(async (req) => {
     const { data: quem, error: errQuem } = await admin.auth.getUser(token);
     if (errQuem || !quem?.user) return json({ erro: "Sessão inválida. Entre de novo no painel." }, 401);
 
-    const { data: perfil } = await admin.from("profiles").select("role, ativo").eq("id", quem.user.id).single();
+    const { data: perfil, error: errPerfil } = await admin.from("profiles").select("role, ativo").eq("id", quem.user.id).maybeSingle();
+    if (errPerfil) return json({ erro: "Erro ao ler o perfil (rode supabase/correcao-permissoes.sql): " + errPerfil.message }, 500);
     if (!perfil || perfil.role !== "admin" || !perfil.ativo) {
       return json({ erro: "Só o administrador pode gerenciar acessos." }, 403);
     }
