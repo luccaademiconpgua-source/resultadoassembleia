@@ -34,6 +34,7 @@
   window.ARVIA_ON = !!(cfg.url && cfg.key && window.supabase && window.supabase.createClient);
   window.ARVIA_CHAVES = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia','enviosAssembleia','envFiltroAssembleia','prefEnvio'];
   window.ARVIA_HASH = location.hash || '';
+  try{ window.ARVIA_VOLTAR = new URLSearchParams(location.search).get('voltar') || ''; }catch(e){ window.ARVIA_VOLTAR=''; }
   if(!window.ARVIA_ON) return;
   document.documentElement.classList.add('arvia-locked');
   try{
@@ -655,6 +656,7 @@
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
   [hidden] { display:none !important; }
   h1.logo-text { margin:0; }
+  a.tab-link { text-decoration:none; display:inline-flex; align-items:center; }
   .assembleia-header[role=button]:focus-visible, .client-header:focus-visible { outline:2px solid var(--ouro); outline-offset:-2px; }
   .tab-btn .count { color:#5E504B; }
   .arvia-copy { flex-basis:100%; margin:8px 0 0; font-size:11px; line-height:1.5; color:var(--texto-sec); }
@@ -785,6 +787,9 @@
     <button class="tab-btn" onclick="switchTab('parcelas',this)">
       📑 Parcelas em Dia <span class="count" id="countParcelasTab">0</span>
     </button>
+    <a class="tab-btn tab-link" href="cadastro.html">
+      📝 Cadastro de venda
+    </a>
     <button class="tab-btn" id="tabBtnAcessos" onclick="switchTab('acessos',this)" hidden>
       🔐 Acessos
     </button>
@@ -3313,6 +3318,7 @@ pdRender();
   }
 
   function abrir(){
+    if(window.ARVIA_VOLTAR==='cadastro'){ location.replace('cadastro.html'); return; }
     liberar();
     const nome = (PERFIL.nome || USER.email).trim();
     window.ARVIA_PRIMEIRO_NOME = nome.split(/\s+/)[0].replace(/^./, c=>c.toUpperCase());
