@@ -654,7 +654,10 @@
   body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
   [hidden] { display:none !important; }
-  .arvia-copy { flex-basis:100%; margin:8px 0 0; font-size:11px; line-height:1.5; color:var(--texto-sec); opacity:.9; }
+  h1.logo-text { margin:0; }
+  .assembleia-header[role=button]:focus-visible, .client-header:focus-visible { outline:2px solid var(--ouro); outline-offset:-2px; }
+  .tab-btn .count { color:#5E504B; }
+  .arvia-copy { flex-basis:100%; margin:8px 0 0; font-size:11px; line-height:1.5; color:var(--texto-sec); }
   .arvia-copy strong { font-weight:600; }
   .ax-copy { margin:4px 0 0; font-size:10.5px; line-height:1.5; color:var(--texto-sec); text-align:center; }
   /* ─── ACESSO / LOGIN ─── */
@@ -707,7 +710,7 @@
 <!-- ACESSO -->
 <div class="ax-gate" id="axGate" hidden>
   <div class="ax-card">
-    <div class="ax-brand"><div class="arvia-mark"><span>A</span></div><div><b>ARVIA</b><small>Capital</small></div></div>
+    <div class="ax-brand"><div class="arvia-mark" aria-hidden="true"><span>A</span></div><div><b>ARVIA</b><small>Capital</small></div></div>
 
     <form id="axLogin" hidden>
       <h2>Painel de Assembleias</h2>
@@ -750,11 +753,11 @@
 
 <header>
   <div class="logo">
-    <div class="arvia-mark"><span>A</span></div>
+    <div class="arvia-mark" aria-hidden="true"><span>A</span></div>
     <div class="arvia-word"><b>ARVIA</b><small>Capital</small></div>
     <div class="arvia-sep"></div>
     <div>
-      <div class="logo-text">Painel de Assembleias</div>
+      <h1 class="logo-text">Painel de Assembleias</h1>
       <div class="logo-sub">Lucca Antunes · Parceiro autorizado Ademicon</div>
     </div>
   </div>
@@ -792,7 +795,7 @@
 
     <!-- Assembleia Editor -->
     <div class="assembleia-box">
-      <div class="assembleia-header" onclick="toggleAssembleia()">
+      <div class="assembleia-header" role="button" tabindex="0" onclick="toggleAssembleia()">
         <h3>⚙️ Configurar resultado da assembleia (imóveis)</h3>
         <span style="font-size:12px;color:var(--verde);">Clique para expandir</span>
       </div>
@@ -882,7 +885,7 @@
   <div class="tab-panel" id="tab-veiculos">
 
     <div class="assembleia-box">
-      <div class="assembleia-header" onclick="toggleAssembleiaVeic()">
+      <div class="assembleia-header" role="button" tabindex="0" onclick="toggleAssembleiaVeic()">
         <h3>⚙️ Configurar resultado da assembleia (veículos)</h3>
         <span style="font-size:12px;color:var(--verde);">Clique para expandir</span>
       </div>
@@ -967,7 +970,7 @@
   <div class="tab-panel" id="tab-clientes">
 
     <div class="assembleia-box">
-      <div class="assembleia-header" onclick="toggleImportBox()">
+      <div class="assembleia-header" role="button" tabindex="0" onclick="toggleImportBox()">
         <h3>📥 Importar clientes por planilha (Excel/CSV)</h3>
         <span style="font-size:12px;color:var(--verde);" id="importBoxToggleLabel">Clique para expandir</span>
       </div>
@@ -1046,7 +1049,7 @@
 <div class="rd-alerts" id="rdAlerts"></div>
 
 <div class="assembleia-box">
-<div class="assembleia-header" onclick="document.getElementById('rdLotBody').classList.toggle('open')">
+<div class="assembleia-header" role="button" tabindex="0" onclick="document.getElementById('rdLotBody').classList.toggle('open')">
 <h3>🎲 Resultado da Loteria Federal (<span id="rdSegName">imóveis</span>)</h3>
 <span style="font-size:12px;color:var(--verde);" id="rdLotSummary">Clique para expandir</span>
 </div>
@@ -1091,7 +1094,7 @@
 <!-- TAB PARCELAS EM DIA -->
 <div class="tab-panel" id="tab-parcelas">
   <div class="assembleia-box">
-    <div class="assembleia-header" onclick="document.getElementById('pdBody').classList.toggle('open')">
+    <div class="assembleia-header" role="button" tabindex="0" onclick="document.getElementById('pdBody').classList.toggle('open')">
       <h3>📑 Relatório de Cobrança do mês</h3>
       <span style="font-size:12px;color:var(--verde);" id="pdSummary">Clique para expandir</span>
     </div>
@@ -1780,7 +1783,7 @@ function renderClientesUnificado(seg){
 
     return `
     <div class="client-card${enviada?' sent':''}" id="${seg}card${i}" data-k="${rdEsc(k)}">
-      <div class="client-header" onclick="toggleCard('${seg}',${i})">
+      <div class="client-header" role="button" tabindex="0" onclick="toggleCard('${seg}',${i})">
         <div class="client-left">
           <div class="avatar" style="background:${av.bg};color:${av.txt}">${initials(cli.nome)}</div>
           <div>
@@ -1849,7 +1852,7 @@ function renderClientesIndividual(seg){
 
     return `
     <div class="client-card" id="${seg}card${i}">
-      <div class="client-header" onclick="toggleCard('${seg}',${i})">
+      <div class="client-header" role="button" tabindex="0" onclick="toggleCard('${seg}',${i})">
         <div class="client-left">
           <div class="avatar" style="background:${av.bg};color:${av.txt}">${initials(c.nome)}</div>
           <div>
@@ -3145,6 +3148,11 @@ envModo();
   const lista = document.getElementById('lista'+(seg==='imoveis'?'Imoveis':'Veiculos'));
   lista.addEventListener('click', e=>{ const b=e.target.closest('[data-env]'); if(b){ e.stopPropagation(); envAcao(seg, b, b.dataset.env); } });
   lista.addEventListener('input', e=>{ if(e.target.matches('textarea.env-msg')) envEditar(seg, e.target); });
+});
+
+document.addEventListener('keydown', e=>{
+  const h = e.target.closest && e.target.closest('.client-header, .assembleia-header[role=button]');
+  if(h && (e.key==='Enter' || e.key===' ')){ e.preventDefault(); h.click(); }
 });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
