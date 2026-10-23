@@ -709,6 +709,13 @@
   .ax-gate[hidden] { display:none; }
   .ax-card { width:100%; max-width:400px; background:#FBF8F1; border-radius:14px; border-top:3px solid var(--ouro); padding:28px 24px 24px; box-shadow:0 24px 60px rgba(0,0,0,.35); display:grid; gap:14px; }
   .ax-brand { display:flex; align-items:center; gap:12px; }
+  .ad-edit td { background: var(--cinza-bg, #F6F1EA); }
+  .ad-edit-grid { display:grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1.4fr) minmax(0,.8fr) auto; gap:10px 12px; align-items:end; }
+  .ad-edit-grid label { display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:4px; }
+  .ad-edit-grid input, .ad-edit-grid select { width:100%; padding:9px 10px; border:1px solid var(--borda, #ddd); border-radius:8px; font:inherit; font-size:14px; background:#fff; }
+  .ad-edit-acts { display:flex; gap:8px; }
+  .ad-edit-nota { margin:8px 0 0; font-size:12px; color:var(--texto-sec); }
+  @media (max-width: 760px) { .ad-edit-grid { grid-template-columns: minmax(0,1fr); } }
   .ax-brand .logo-arvia { height:58px; width:auto; display:block; }
   .ax-brand b { font-family:var(--display); font-size:24px; letter-spacing:.18em; color:var(--verde); display:block; line-height:1; }
   .ax-brand small { font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#8A6A22; }
@@ -3621,7 +3628,7 @@ pdRender();
 
   // ─── ABA ACESSOS (admin) ───
   const fmtData = iso => { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
-  let AD = { perfis:[], dados:[], sel:null };
+  let AD = { perfis:[], dados:[], sel:null, editando:null };
   async function chamar(acao, extra){
     const { data, error } = await sb.functions.invoke('admin-usuarios', { body:Object.assign({acao, redirectTo:REDIRECT}, extra||{}) });
     if(error){
@@ -3647,6 +3654,15 @@ pdRender();
       const cotas = meus.filter(r=>r.chave==='clientesImoveis'||r.chave==='clientesVeiculos').reduce((a,r)=>a+(Array.isArray(r.valor)?r.valor.length:0),0);
       const ult = meus.reduce((m,r)=>r.updated_at>m?r.updated_at:m,'');
       const eu = u.id===USER.id;
+      if(AD.editando===u.id) return `<tr class="ad-edit"><td colspan="6">
+        <div class="ad-edit-grid">
+          <div><label for="edNome">Nome</label><input id="edNome" type="text" value="${esc(u.nome||'')}" autocomplete="off"></div>
+          <div><label for="edEmail">E-mail de acesso</label><input id="edEmail" type="email" value="${esc(u.email)}" autocomplete="off"></div>
+          <div><label for="edRole">Perfil</label><select id="edRole" ${eu?'disabled title="Você não pode mudar o próprio perfil"':''}><option value="consultor" ${u.role!=='admin'?'selected':''}>Consultor</option><option value="admin" ${u.role==='admin'?'selected':''}>Administrador</option></select></div>
+          <div class="ad-edit-acts"><button class="btn btn-primary btn-sm" data-salvar="${u.id}" data-email-antigo="${esc(u.email)}">Salvar</button><button class="btn btn-outline btn-sm" data-cancelar="1">Cancelar</button></div>
+        </div>
+        <p class="ad-edit-nota">Se você mudar o e-mail, a pessoa passa a entrar com o e-mail novo e a mesma senha.</p>
+      </td></tr>`;
       return `<tr class="${AD.sel===u.id?'sel':''}">
         <td><div class="ad-nome">${esc(u.nome||'—')}${eu?' (você)':''}</div><div class="ad-email">${esc(u.email)}</div></td>
         <td>${u.role==='admin'?'Administrador':'Consultor'}</td>
@@ -3655,6 +3671,7 @@ pdRender();
         <td>${ult?fmtData(ult):'Nunca entrou'}</td>
         <td><div class="ad-acts">
           <button class="btn btn-outline btn-sm" data-ver="${u.id}">Ver carteira</button>
+          <button class="btn btn-outline btn-sm" data-editar="${u.id}">Editar</button>
           ${eu?'':`<button class="btn btn-outline btn-sm" data-senha="${u.id}" data-email="${esc(u.email)}" data-nome="${esc(u.nome||'')}">Nova senha</button><button class="btn ${u.ativo?'btn-outline':'btn-primary'} btn-sm" data-bloq="${u.id}" data-ativo="${u.ativo?1:0}">${u.ativo?'Bloquear':'Desbloquear'}</button>`}
         </div></td></tr>`;
     }).join('') || '<tr><td colspan="6">Nenhum usuário ainda.</td></tr>';
@@ -3685,6 +3702,24 @@ pdRender();
   }
   $('adBody').addEventListener('click', async e=>{
     const ver = e.target.closest('[data-ver]'); if(ver) return verCarteira(ver.dataset.ver);
+    const ed = e.target.closest('[data-editar]');
+    if(ed){ AD.editando = ed.dataset.editar; await admRender(); const n=$('edNome'); if(n){ n.focus(); n.select(); } return; }
+    if(e.target.closest('[data-cancelar]')){ AD.editando = null; return admRender(); }
+    const sv = e.target.closest('[data-salvar]');
+    if(sv){
+      const nome = $('edNome').value.trim(), email = $('edEmail').value.trim().toLowerCase(), role = $('edRole').value;
+      if(nome.length < 2) return toast('Informe o nome.', true);
+      if(!/^\S+@\S+\.\S+$/.test(email)) return toast('E-mail inválido.', true);
+      sv.disabled = true; sv.textContent = 'Salvando…';
+      try{
+        await chamar('editar', {id:sv.dataset.salvar, nome, email, role});
+        if(sv.dataset.salvar===USER.id && PERFIL){ PERFIL.nome = nome; PERFIL.email = email; }
+        AD.editando = null; toast(email!==sv.dataset.emailAntigo ? 'Cadastro atualizado. O acesso agora é pelo e-mail novo.' : 'Cadastro atualizado.');
+        try{ CRM.carregado = false; }catch(e){}
+        admRender();
+      }catch(err){ sv.disabled=false; sv.textContent='Salvar'; toast(err.message, true); }
+      return;
+    }
     const ns = e.target.closest('[data-senha]');
     if(ns){
       if(ns.dataset.arm!=='1'){ ns.dataset.arm='1'; ns.textContent='Confirmar nova senha'; setTimeout(()=>{ if(ns.isConnected){ ns.dataset.arm=''; ns.textContent='Nova senha'; } },3500); return; }

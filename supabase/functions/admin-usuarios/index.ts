@@ -71,6 +71,32 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
+    if (acao === "editar") {
+      const id = String(body.id ?? "");
+      const nome = String(body.nome ?? "").trim();
+      const email = String(body.email ?? "").trim().toLowerCase();
+      const role = body.role === "admin" ? "admin" : "consultor";
+      if (!id || nome.length < 2) return json({ erro: "Informe o nome." }, 400);
+      if (!/^\S+@\S+\.\S+$/.test(email)) return json({ erro: "E-mail inválido." }, 400);
+      const { data: atual, error: errAtual } = await admin.from("profiles").select("email, role").eq("id", id).maybeSingle();
+      if (errAtual || !atual) return json({ erro: "Usuário não encontrado." }, 404);
+      if (id === quem.user.id && role !== atual.role) return json({ erro: "Você não pode mudar o próprio perfil." }, 400);
+      if (atual.role === "admin" && role !== "admin") {
+        const { count } = await admin.from("profiles").select("id", { count: "exact", head: true }).eq("role", "admin").eq("ativo", true);
+        if ((count ?? 0) <= 1) return json({ erro: "O painel precisa de pelo menos um administrador." }, 400);
+      }
+      const mudancas: Record<string, unknown> = { user_metadata: { nome } };
+      if (email !== atual.email) { mudancas.email = email; mudancas.email_confirm = true; }
+      const { error: errAuth } = await admin.auth.admin.updateUserById(id, mudancas);
+      if (errAuth) {
+        const ja = /already|registered|exists/i.test(errAuth.message);
+        return json({ erro: ja ? "Já existe um acesso com esse e-mail." : errAuth.message }, 400);
+      }
+      const { error: errPerfil2 } = await admin.from("profiles").update({ nome, email, role }).eq("id", id);
+      if (errPerfil2) return json({ erro: errPerfil2.message }, 400);
+      return json({ ok: true });
+    }
+
     if (acao === "bloquear" || acao === "desbloquear") {
       const id = String(body.id ?? "");
       if (!id) return json({ erro: "Usuário não informado." }, 400);
