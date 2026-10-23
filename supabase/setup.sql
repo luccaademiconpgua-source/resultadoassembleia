@@ -112,6 +112,9 @@ revoke all on public.profiles, public.user_data from anon;
 grant select, update on public.profiles to authenticated;
 grant select, insert, update, delete on public.user_data to authenticated;
 grant execute on function public.is_admin(), public.is_ativo() to authenticated;
+-- A função de administração (Edge Function) usa o papel service_role e também precisa de acesso
+grant all on public.profiles, public.user_data to service_role;
+grant execute on function public.is_admin(), public.is_ativo() to service_role;
 
 -- 7) Sinal de vida (evita que o projeto grátis pause por inatividade) --------
 create or replace function public.ping() returns text

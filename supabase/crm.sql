@@ -79,3 +79,4 @@ create policy "leads: só admin apaga" on public.leads
 revoke all on public.leads from anon;
 grant insert on public.leads to anon;
 grant select, insert, update, delete on public.leads to authenticated;
+grant all on public.leads to service_role;
