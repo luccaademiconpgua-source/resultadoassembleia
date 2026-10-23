@@ -3482,7 +3482,7 @@ pdRender();
   // ─── CRM DE LEADS ───
   const ETAPAS = [['novo','Novos'],['contato','Em contato'],['proposta','Proposta enviada'],['fechado','Fechados'],['perdido','Perdidos']];
   const ETAPA_NOME = Object.fromEntries(ETAPAS.map(([k,n])=>[k, {novo:'Novo',contato:'Em contato',proposta:'Proposta enviada',fechado:'Fechado',perdido:'Perdido'}[k]]));
-  const ORIGEM = {'links':'Link da bio (Instagram)','landing':'Site ARVIA (landing page)','formulario-consultoria':'Formulário de consultoria','site':'Site','calculadora':'Calculadora','manual':'Cadastro manual'};
+  const ORIGEM = {'links':'Link da bio (Instagram)','landing':'Site ARVIA (landing page)','formulario-consultoria':'Formulário de consultoria','exterior':'Página Brasileiros no exterior','site':'Site','calculadora':'Calculadora','manual':'Cadastro manual'};
   let CRM = { leads:[], perfis:[], etapa:'novo', aberto:null, ultimoNovos:null, carregado:false };
   try{ const e = localStorage.getItem('crmEtapa'); if(e) CRM.etapa = e; }catch(e){}
   const quando = iso => { const d=new Date(iso), m=Math.round((Date.now()-d)/60000); if(m<1) return 'agora'; if(m<60) return `há ${m} min`; const h=Math.round(m/60); if(h<24) return `há ${h} h`; const dd=Math.round(h/24); if(dd<7) return `há ${dd} dia${dd>1?'s':''}`; return d.toLocaleDateString('pt-BR'); };
@@ -3544,7 +3544,7 @@ pdRender();
     el.innerHTML = lista.map(l=>{
       const q = l.qualificacao || {};
       const aberto = CRM.aberto===l.id;
-      const qual = [['Mora de aluguel',q.aluguel],['Carro próprio',q.carro],['Quer empreender',q.empreender],['Guarda dinheiro',q.guardar],['Pressa',q.pressa],['Lance disponível',q.lance],['Diagnóstico mostrado',q.diagnostico],['Veio de',q.trafego]].filter(x=>x[1]);
+      const qual = [['Mora de aluguel',q.aluguel],['Carro próprio',q.carro],['Quer empreender',q.empreender],['Guarda dinheiro',q.guardar],['Pressa',q.pressa],['Lance disponível',q.lance],['Diagnóstico mostrado',q.diagnostico],['País onde mora',q.pais],['Moeda simulada',q.moeda],['Carta simulada',q.carta_simulada?Number(q.carta_simulada).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}):''],['Veio de',q.trafego]].filter(x=>x[1]);
       return `<article class="crm-card" data-st="${esc(l.status)}" data-id="${esc(l.id)}">
         <div class="crm-head" role="button" tabindex="0" aria-expanded="${aberto}">
           <div style="min-width:0">
