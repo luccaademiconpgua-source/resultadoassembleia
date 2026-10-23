@@ -17,6 +17,27 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="supabase-config.js"></script>
+<script>
+// ─── PORTÃO DE ACESSO (roda antes do painel) ─────────────────────────────────
+(function(){
+  var cfg = window.ARVIA_CFG || {};
+  window.ARVIA_ON = !!(cfg.url && cfg.key && window.supabase && window.supabase.createClient);
+  window.ARVIA_CHAVES = ['clientesImoveis','clientesVeiculos','gruposImoveis','gruposVeiculos','dataAssembleiaImoveis','dataAssembleiaVeiculos','viewModeImoveis','viewModeVeiculos','radarSorteio','parcelasEmDia'];
+  window.ARVIA_HASH = location.hash || '';
+  if(!window.ARVIA_ON) return;
+  document.documentElement.classList.add('arvia-locked');
+  try{
+    var temSessao = Object.keys(localStorage).some(function(k){ return /^sb-.*-auth-token$/.test(k); });
+    // Sem sessão e com dados de um usuário que já sincronizou: limpa antes do painel carregar.
+    if(!temSessao && localStorage.getItem('arvia_dono')){
+      window.ARVIA_CHAVES.concat(['arvia_dono','arvia_sync','arvia_pend']).forEach(function(k){ localStorage.removeItem(k); });
+    }
+  }catch(e){}
+  window.sbc = window.supabase.createClient(cfg.url, cfg.key, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+})();
+</script>
 <style>
   :root {
     --verde: #4A0D18;
@@ -619,9 +640,96 @@
   body.pd-fila-on { padding-bottom:150px; }
   body.pd-fila-on .toaster { bottom:calc(120px + env(safe-area-inset-bottom,0px)); }
   .pd-empty { background:#fff; border:1px dashed var(--cinza-borda); border-radius:var(--radius); padding:24px; text-align:center; color:var(--texto-sec); font-size:13px; }
+  [hidden] { display:none !important; }
+  /* ─── ACESSO / LOGIN ─── */
+  html.arvia-locked body > header, html.arvia-locked body > main, html.arvia-locked body > footer { display:none !important; }
+  .ax-gate { position:fixed; inset:0; z-index:400; background:radial-gradient(120% 90% at 20% 0%, #4A0D18 0%, var(--bordo-abs) 60%); display:flex; align-items:center; justify-content:center; padding:calc(24px + env(safe-area-inset-top,0px)) max(16px, env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); overflow-y:auto; }
+  .ax-gate[hidden] { display:none; }
+  .ax-card { width:100%; max-width:400px; background:#FBF8F1; border-radius:14px; border-top:3px solid var(--ouro); padding:28px 24px 24px; box-shadow:0 24px 60px rgba(0,0,0,.35); display:grid; gap:14px; }
+  .ax-brand { display:flex; align-items:center; gap:12px; }
+  .ax-brand .arvia-mark { flex:none; }
+  .ax-brand b { font-family:var(--display); font-size:24px; letter-spacing:.18em; color:var(--verde); display:block; line-height:1; }
+  .ax-brand small { font-size:10px; letter-spacing:.3em; text-transform:uppercase; color:#8A6A22; }
+  .ax-card h2 { font-family:var(--display); font-size:28px; font-weight:600; color:var(--verde); margin:4px 0 0; line-height:1.1; }
+  .ax-card p { margin:0; font-size:13px; color:var(--texto-sec); line-height:1.5; }
+  .ax-card label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
+  .ax-card input { width:100%; padding:11px 12px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:15px; font-family:var(--fonte); background:#fff; color:var(--texto); }
+  .ax-card input:focus { outline:none; border-color:var(--verde-mid); }
+  .ax-card .btn { width:100%; padding:12px; font-size:14px; }
+  .ax-link { background:none; border:0; color:var(--verde-mid); font-size:13px; cursor:pointer; text-decoration:underline; padding:2px 0; justify-self:start; font-family:var(--fonte); }
+  .ax-msg { font-size:13px; border-radius:var(--radius-sm); padding:9px 12px; }
+  .ax-msg.erro { background:#FDECEA; color:#A93226; }
+  .ax-msg.ok { background:var(--verde-light); color:var(--verde); }
+  .ax-msg[hidden] { display:none; }
+  .ax-user { display:flex; align-items:center; gap:8px; font-size:12px; color:#F5F1E8; }
+  .ax-user[hidden] { display:none; }
+  .ax-sync { font-size:11px; color:var(--ouro-claro); white-space:nowrap; }
+  .ax-sync.off { color:#F0A39B; }
+  .ax-sair { background:transparent; border:1px solid rgba(198,160,74,.45); color:var(--ouro-claro); border-radius:16px; padding:4px 12px; font-size:12px; cursor:pointer; font-family:var(--fonte); }
+  .ax-banner { position:fixed; top:calc(76px + env(safe-area-inset-top,0px)); left:50%; transform:translateX(-50%); z-index:260; background:var(--bordo-abs); color:#F5F1E8; border:1px solid var(--ouro); border-radius:999px; padding:8px 8px 8px 16px; font-size:13px; display:flex; gap:10px; align-items:center; max-width:calc(100% - 32px); }
+  .ax-banner[hidden] { display:none; }
+  .ax-banner button { background:var(--ouro); color:var(--bordo-abs); border:0; border-radius:999px; padding:5px 12px; font-weight:600; cursor:pointer; font-family:var(--fonte); }
+  @media (max-width:640px){ .ax-user .ax-nome { display:none; } }
+  /* ─── ABA ACESSOS (admin) ─── */
+  .ad-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto; gap:10px; align-items:end; }
+  .ad-form label { font-size:12px; color:var(--texto-sec); display:block; margin-bottom:4px; }
+  .ad-form input { width:100%; padding:8px 10px; border:1.5px solid var(--cinza-borda); border-radius:var(--radius-sm); font-size:13px; font-family:var(--fonte); }
+  @media (max-width:640px){ .ad-form { grid-template-columns:minmax(0,1fr); } }
+  .ad-table-wrap { overflow-x:auto; background:#fff; border:1px solid var(--cinza-borda); border-radius:var(--radius); }
+  .ad-table { width:100%; border-collapse:collapse; min-width:720px; font-size:13px; font-variant-numeric:tabular-nums; }
+  .ad-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--texto-sec); padding:10px 12px; border-bottom:1px solid var(--cinza-borda); background:var(--cinza-bg); }
+  .ad-table td { padding:10px 12px; border-bottom:1px solid var(--cinza-borda); vertical-align:middle; }
+  .ad-table tr:last-child td { border-bottom:0; }
+  .ad-table tr.sel td { background:var(--laranja-light); }
+  .ad-nome { font-weight:600; color:var(--verde); }
+  .ad-email { font-size:12px; color:var(--texto-sec); }
+  .ad-acts { display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
 </style>
 </head>
 <body>
+
+<!-- ACESSO -->
+<div class="ax-gate" id="axGate" hidden>
+  <div class="ax-card">
+    <div class="ax-brand"><div class="arvia-mark"><span>A</span></div><div><b>ARVIA</b><small>Capital</small></div></div>
+
+    <form id="axLogin" hidden>
+      <h2>Painel de Assembleias</h2>
+      <p>Acesso restrito a consultores autorizados.</p>
+      <div style="display:grid;gap:12px;margin-top:14px;">
+        <div><label for="axEmail">E-mail</label><input id="axEmail" type="email" autocomplete="username" required/></div>
+        <div><label for="axSenha">Senha</label><input id="axSenha" type="password" autocomplete="current-password" required/></div>
+        <button class="btn btn-primary" type="submit" id="axEntrar">Entrar</button>
+        <button class="ax-link" type="button" id="axEsqueci">Esqueci minha senha</button>
+      </div>
+    </form>
+
+    <form id="axNovaSenha" hidden>
+      <h2 id="axNovaTitulo">Crie sua senha</h2>
+      <p>Use pelo menos 8 caracteres. É com ela que você vai entrar no painel.</p>
+      <div style="display:grid;gap:12px;margin-top:14px;">
+        <div><label for="axSenha1">Nova senha</label><input id="axSenha1" type="password" autocomplete="new-password" minlength="8" required/></div>
+        <div><label for="axSenha2">Repita a senha</label><input id="axSenha2" type="password" autocomplete="new-password" minlength="8" required/></div>
+        <button class="btn btn-primary" type="submit">Salvar senha e entrar</button>
+      </div>
+    </form>
+
+    <div id="axMigrar" hidden>
+      <h2>Dados neste navegador</h2>
+      <p id="axMigrarTxt"></p>
+      <div style="display:grid;gap:10px;margin-top:14px;">
+        <button class="btn btn-primary" type="button" id="axMigrarA"></button>
+        <button class="btn btn-outline" type="button" id="axMigrarB"></button>
+      </div>
+    </div>
+
+    <div id="axCarregando" hidden><p>Carregando seus dados...</p></div>
+
+    <div class="ax-msg" id="axMsg" hidden></div>
+  </div>
+</div>
+<div class="ax-banner" id="axBanner" hidden><span>Há dados atualizados de outro aparelho.</span><button type="button" id="axBannerBtn">Atualizar</button></div>
+
 
 <header>
   <div class="logo">
@@ -656,6 +764,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('parcelas',this)">
       📑 Parcelas em Dia <span class="count" id="countParcelasTab">0</span>
+    </button>
+    <button class="tab-btn" id="tabBtnAcessos" onclick="switchTab('acessos',this)" hidden>
+      🔐 Acessos
     </button>
   </div>
 
@@ -1013,6 +1124,31 @@
   </div>
 </div>
 
+<!-- TAB ACESSOS (admin) -->
+<div class="tab-panel" id="tab-acessos">
+  <div class="assembleia-box">
+    <div class="assembleia-header"><h3>✉️ Convidar consultor</h3></div>
+    <div class="assembleia-body open">
+      <div class="ad-form">
+        <div><label for="adNome">Nome</label><input id="adNome" type="text" placeholder="ex: Mariana Souza"/></div>
+        <div><label for="adEmail">E-mail</label><input id="adEmail" type="email" placeholder="ex: mariana@email.com"/></div>
+        <div><button class="btn btn-primary" id="adConvidar">Enviar convite</button></div>
+      </div>
+      <div class="hint">💡 A pessoa recebe um e-mail para criar a senha. Cada consultor vê só a própria carteira; você, como administrador, vê a de todos aqui embaixo.</div>
+    </div>
+  </div>
+
+  <div class="rd-section-title">👥 Quem tem acesso</div>
+  <div class="ad-table-wrap">
+    <table class="ad-table">
+      <thead><tr><th>Consultor</th><th>Papel</th><th>Situação</th><th>Cotas</th><th>Última atualização</th><th></th></tr></thead>
+      <tbody id="adBody"><tr><td colspan="6" style="color:var(--texto-sec)">Carregando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div id="adCarteira"></div>
+</div>
+
 </main>
 <footer class="arvia-foot"><span><b>ARVIA</b> Capital · Estratégia para transformar projetos em patrimônio.</span><span>Lucca Antunes · Parceiro autorizado Ademicon · (41) 98840-2942</span></footer>
 
@@ -1095,7 +1231,7 @@ if (window.pdfjsLib) {
 
 // ─── STORAGE ──────────────────────────────────────────────────────────────────
 function load(key,def){ try{const v=localStorage.getItem(key);return v?JSON.parse(v):def;}catch(e){return def;} }
-function save(key,val){ try{localStorage.setItem(key,JSON.stringify(val));}catch(e){} }
+function save(key,val){ try{localStorage.setItem(key,JSON.stringify(val));}catch(e){} if(window.arviaSalvar) window.arviaSalvar(key); }
 
 let clientesImoveis = load('clientesImoveis', []);
 
@@ -1261,6 +1397,7 @@ function switchTab(id, btn){
   btn.classList.add('active');
   if(id==='radar') rdRender(true);
   if(id==='parcelas') pdRender();
+  if(id==='acessos' && window.admRender) admRender();
   try{ btn.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'}); }catch(e){}
 }
 
@@ -2443,7 +2580,8 @@ function cancelarRedefinicao(){
   document.getElementById('resetConfirm').hidden = true;
   document.getElementById('resetActions').hidden = false;
 }
-function redefinirTudo(){
+async function redefinirTudo(){
+  if(window.arviaApagarTudo){ try{ await window.arviaApagarTudo(); }catch(e){ return toast('Não consegui apagar os dados na nuvem. Verifique a internet e tente de novo.', true); } }
   CHAVES_DADOS.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
   toast('Dados apagados. Recarregando...');
   setTimeout(()=>{ location.reload(); }, 700);
@@ -2526,7 +2664,7 @@ function pdCtx(card){
   const imv = (card.tipo==='imoveis'||card.tipo==='misto') ? `\n\nDo meu lado, sigo atento e trabalhando todo mês na tentativa de contemplação ${p('da sua cota','das suas cotas')}.` : '';
   const contL = card.cont ? `\n\nComo ${p('sua cota já foi contemplada','suas cotas já foram contempladas')}, manter as parcelas em dia é o que garante a segurança do seu bem.` : '';
   return {
-    nome: primeiroNome(pdTitle(card.nome)), c:'Lucca', saud:pdSaud(), n: pd.atr[card.key]||card.atraso, p,
+    nome: primeiroNome(pdTitle(card.nome)), c:(window.ARVIA_PRIMEIRO_NOME||'Lucca'), saud:pdSaud(), n: pd.atr[card.key]||card.atraso, p,
     cot: ` (${cot})`, imv: contL+imv,
     ass: pd.cfg.ass ? ` A próxima assembleia é no dia *${pdDM(pd.cfg.ass)}*.` : '',
     venc: pd.cfg.venc ? ` (dia *${pdDM(pd.cfg.venc)}*)` : '',
@@ -2649,7 +2787,7 @@ function pdMsg(card){
   const sc = card.cancel ? 4 : x.n>=3 ? 3 : x.n===2 ? 2 : 1;
   const lista = PD_TPL[sc], tpl = lista[(pd.ver[card.key]||0) % lista.length];
   let t = tpl.f(x);
-  if(pd.cfg.ia) t += `\n\n_Mensagem enviada com apoio de I.A. Qualquer dúvida, eu (Lucca) estou por aqui._`;
+  if(pd.cfg.ia) t += `\n\n_Mensagem enviada com apoio de I.A. Qualquer dúvida, eu (${window.ARVIA_PRIMEIRO_NOME||'Lucca'}) estou por aqui._`;
   return {text:t, tpl, sc, n:x.n};
 }
 
@@ -2892,5 +3030,307 @@ renderTabelaClientes();
 rdRender(true);
 pdRender();
 </script>
+<script>
+// ─── ACESSO, SINCRONIZAÇÃO E ADMIN (Supabase) ────────────────────────────────
+(function(){
+  if(!window.ARVIA_ON) return;
+  const sb = window.sbc, CH = window.ARVIA_CHAVES;
+  const $ = id => document.getElementById(id);
+  const LS = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} },
+    obj(k){ try{ return JSON.parse(localStorage.getItem(k)||'{}')||{}; }catch(e){ return {}; } }
+  };
+  const esc = t => String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const REDIRECT = location.origin + location.pathname;
+  let USER = null, PERFIL = null;
+
+  // ── telas ──
+  function tela(qual){
+    ['axLogin','axNovaSenha','axMigrar','axCarregando'].forEach(id=>{ $(id).hidden = id!==qual; });
+    $('axGate').hidden = false; msg('');
+  }
+  function msg(t, tipo){ const m=$('axMsg'); m.hidden=!t; m.textContent=t||''; m.className='ax-msg '+(tipo||'erro'); }
+  function liberar(){ $('axGate').hidden = true; document.documentElement.classList.remove('arvia-locked'); }
+  function traduz(e){
+    const t = String(e?.message||e||'');
+    if(/invalid login/i.test(t)) return 'E-mail ou senha incorretos.';
+    if(/banned|bloque/i.test(t)) return 'Seu acesso está bloqueado. Fale com o administrador.';
+    if(/rate limit|too many/i.test(t)) return 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.';
+    if(/fetch|network/i.test(t)) return 'Sem conexão com o servidor. Verifique a internet.';
+    if(/password should|at least/i.test(t)) return 'A senha precisa ter pelo menos 8 caracteres.';
+    if(/same.*password|different from the old/i.test(t)) return 'A nova senha precisa ser diferente da anterior.';
+    return t || 'Algo deu errado. Tente de novo.';
+  }
+
+  // ── sincronização ──
+  let pend = LS.obj('arvia_pend'), timer = null, enviando = false;
+  function syncStatus(t, off){ const s=$('axSync'); if(s){ s.textContent=t; s.classList.toggle('off', !!off); } }
+  async function enviar(){
+    if(!USER || enviando) return;
+    const chaves = Object.keys(pend); if(!chaves.length){ syncStatus('☁ Salvo'); return; }
+    enviando = true; syncStatus('Salvando...');
+    const linhas = chaves.map(k=>{ let v=null; try{ v=JSON.parse(LS.get(k)); }catch(e){} return {user_id:USER.id, chave:k, valor:v}; });
+    const { data, error } = await sb.from('user_data').upsert(linhas, {onConflict:'user_id,chave'}).select('chave,updated_at');
+    enviando = false;
+    if(error){ syncStatus('Sem conexão: salvo neste aparelho', true); return; }
+    const sync = LS.obj('arvia_sync');
+    (data||[]).forEach(r=>{ sync[r.chave]=r.updated_at; delete pend[r.chave]; });
+    LS.set('arvia_sync', JSON.stringify(sync)); LS.set('arvia_pend', JSON.stringify(pend));
+    syncStatus(Object.keys(pend).length ? 'Salvando...' : '☁ Salvo');
+    if(Object.keys(pend).length) agendar();
+  }
+  function agendar(){ clearTimeout(timer); timer = setTimeout(enviar, 900); }
+  window.arviaSalvar = function(k){
+    if(!USER || !CH.includes(k)) return;
+    pend[k] = 1; LS.set('arvia_pend', JSON.stringify(pend)); syncStatus('Salvando...'); agendar();
+  };
+  window.arviaApagarTudo = async function(){
+    if(!USER) return;
+    await sb.from('user_data').delete().eq('user_id', USER.id);
+    pend = {}; ['arvia_sync','arvia_pend'].forEach(LS.del);
+  };
+  window.addEventListener('online', enviar);
+  setInterval(()=>{ if(Object.keys(pend).length) enviar(); }, 30000);
+
+  async function baixar(){
+    const { data, error } = await sb.from('user_data').select('chave,valor,updated_at').eq('user_id', USER.id);
+    if(error) throw error;
+    return data || [];
+  }
+  // Grava o que veio da nuvem; devolve true se algo mudou no que o painel já tinha carregado.
+  function aplicar(linhas){
+    const sync = LS.obj('arvia_sync'); let mudou = false;
+    linhas.forEach(r=>{
+      if(!CH.includes(r.chave) || pend[r.chave]) return;
+      if(sync[r.chave] === r.updated_at) return;
+      LS.set(r.chave, JSON.stringify(r.valor)); sync[r.chave] = r.updated_at; mudou = true;
+    });
+    LS.set('arvia_sync', JSON.stringify(sync));
+    return mudou;
+  }
+  function temDadosLocais(){ return CH.some(k=>{ const v=LS.get(k); return v && v!=='[]' && v!=='{}' && v!=='""'; }); }
+  function limparLocal(){ CH.concat(['arvia_sync','arvia_pend']).forEach(LS.del); pend = {}; }
+  function recarregar(){
+    try{ const n=+(sessionStorage.getItem('arvia_reload')||0); if(Date.now()-n<8000) return false; sessionStorage.setItem('arvia_reload', Date.now()); }catch(e){}
+    location.reload(); return true;
+  }
+  function escolha(texto, a, b){
+    return new Promise(res=>{
+      tela('axMigrar'); $('axMigrarTxt').textContent=texto; $('axMigrarA').textContent=a; $('axMigrarB').textContent=b;
+      $('axMigrarA').onclick=()=>res('a'); $('axMigrarB').onclick=()=>res('b');
+    });
+  }
+
+  // ── entrada ──
+  async function entrar(user){
+    USER = user;
+    tela('axCarregando');
+    const { data:perfil, error } = await sb.from('profiles').select('*').eq('id', user.id).maybeSingle();
+    if(error || !perfil){ await sb.auth.signOut(); USER=null; tela('axLogin'); return msg(error ? traduz(error) : 'Seu usuário não tem perfil no painel. Fale com o administrador.'); }
+    if(!perfil.ativo){ await sb.auth.signOut(); USER=null; tela('axLogin'); return msg('Seu acesso está bloqueado. Fale com o administrador.'); }
+    PERFIL = perfil;
+
+    let linhas;
+    try{ linhas = await baixar(); }
+    catch(e){
+      // Sem internet: segue com o que está neste aparelho, se for deste usuário.
+      if(LS.get('arvia_dono')===user.id){ abrir(); syncStatus('Sem conexão: salvo neste aparelho', true); return; }
+      tela('axLogin'); return msg(traduz(e));
+    }
+    const dono = LS.get('arvia_dono');
+    let mudou = false;
+    if(dono && dono!==user.id){ limparLocal(); mudou = true; }
+    if(!dono && temDadosLocais()){
+      const nuvemVazia = !linhas.length;
+      const r = nuvemVazia
+        ? await escolha('Este navegador tem clientes e configurações salvos de antes do login. Quer levar tudo para a sua conta?', 'Levar para minha conta', 'Começar do zero')
+        : await escolha('Sua conta já tem dados salvos na nuvem, e este navegador também tem dados de antes do login. Qual versão você quer manter?', 'Usar os da minha conta', 'Substituir pelos deste navegador');
+      tela('axCarregando');
+      if((nuvemVazia && r==='a') || (!nuvemVazia && r==='b')){
+        CH.forEach(k=>{ if(LS.get(k)!==null) pend[k]=1; });
+        LS.set('arvia_pend', JSON.stringify(pend)); LS.set('arvia_dono', user.id);
+        await enviar();
+        abrir(); return;
+      }
+      limparLocal(); mudou = true;
+    }
+    LS.set('arvia_dono', user.id);
+    if(aplicar(linhas)) mudou = true;
+    if(mudou && recarregar()) return;
+    abrir();
+    if(Object.keys(pend).length) enviar();
+  }
+
+  function abrir(){
+    liberar();
+    const nome = (PERFIL.nome || USER.email).trim();
+    window.ARVIA_PRIMEIRO_NOME = nome.split(/\s+/)[0].replace(/^./, c=>c.toUpperCase());
+    const sub = document.querySelector('.logo-sub'); if(sub) sub.textContent = `${nome} · Parceiro autorizado Ademicon`;
+    const hr = document.querySelector('.header-right');
+    if(hr && !$('axUser')){
+      hr.insertAdjacentHTML('afterbegin', `<div class="ax-user" id="axUser"><span class="ax-sync" id="axSync">☁ Salvo</span><span class="ax-nome">${esc(nome.split(/\s+/)[0])}</span><button class="ax-sair" id="axSair" type="button">Sair</button></div>`);
+      $('axSair').addEventListener('click', sair);
+    }
+    if(PERFIL.role==='admin'){ $('tabBtnAcessos').hidden = false; }
+    if(typeof pdRender==='function') try{ pdRender(); }catch(e){}
+  }
+
+  async function sair(){
+    if(Object.keys(pend).length){ await enviar(); if(Object.keys(pend).length && !confirmaSaida()) return; }
+    await sb.auth.signOut();
+    limparLocal(); LS.del('arvia_dono');
+    location.reload();
+  }
+  let saidaArmada = 0;
+  function confirmaSaida(){
+    if(Date.now()-saidaArmada < 4000) return true;
+    saidaArmada = Date.now();
+    toast('Há alterações ainda não salvas na nuvem. Toque em Sair de novo para sair mesmo assim.', true);
+    return false;
+  }
+
+  // Atualizações feitas em outro aparelho
+  let ultimaBusca = Date.now();
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.visibilityState!=='visible' || !USER || Date.now()-ultimaBusca<60000) return;
+    ultimaBusca = Date.now();
+    try{
+      const linhas = await baixar(), sync = LS.obj('arvia_sync');
+      if(linhas.some(r=>CH.includes(r.chave) && !pend[r.chave] && sync[r.chave]!==r.updated_at)){
+        $('axBanner').hidden = false;
+        $('axBannerBtn').onclick = ()=>{ aplicar(linhas); location.reload(); };
+      }
+    }catch(e){}
+  });
+
+  // ── formulários ──
+  $('axLogin').addEventListener('submit', async e=>{
+    e.preventDefault(); msg('');
+    const b=$('axEntrar'); b.disabled=true; b.textContent='Entrando...';
+    const { data, error } = await sb.auth.signInWithPassword({ email:$('axEmail').value.trim(), password:$('axSenha').value });
+    b.disabled=false; b.textContent='Entrar';
+    if(error) return msg(traduz(error));
+    entrar(data.user);
+  });
+  $('axEsqueci').addEventListener('click', async ()=>{
+    const email = $('axEmail').value.trim();
+    if(!email) return msg('Digite seu e-mail acima e toque de novo em "Esqueci minha senha".');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: REDIRECT });
+    if(error) return msg(traduz(error));
+    msg('Se esse e-mail tiver acesso, você vai receber um link para criar uma nova senha.', 'ok');
+  });
+  $('axNovaSenha').addEventListener('submit', async e=>{
+    e.preventDefault();
+    const s1=$('axSenha1').value, s2=$('axSenha2').value;
+    if(s1.length<8) return msg('A senha precisa ter pelo menos 8 caracteres.');
+    if(s1!==s2) return msg('As duas senhas não são iguais.');
+    const { data, error } = await sb.auth.updateUser({ password:s1 });
+    if(error) return msg(traduz(error));
+    history.replaceState(null, '', REDIRECT);
+    entrar(data.user);
+  });
+
+  // ── início ──
+  (async function(){
+    const hash = window.ARVIA_HASH || '';
+    const fluxo = (hash.match(/type=(invite|recovery|signup|magiclink)/)||[])[1];
+    const erroLink = /error_code=|error=/.test(hash) ? decodeURIComponent((hash.match(/error_description=([^&]+)/)||[])[1]||'').replace(/\+/g,' ') : '';
+    const { data:{ session } } = await sb.auth.getSession();
+    if(erroLink && !session){ history.replaceState(null,'',REDIRECT); tela('axLogin'); return msg(/expired|invalid/i.test(erroLink) ? 'Esse link expirou ou já foi usado. Peça um novo convite ao administrador ou use "Esqueci minha senha".' : erroLink); }
+    if(session && (fluxo==='invite' || fluxo==='recovery')){
+      USER = session.user; tela('axNovaSenha');
+      $('axNovaTitulo').textContent = fluxo==='invite' ? 'Bem-vindo! Crie sua senha' : 'Crie uma nova senha';
+      return;
+    }
+    if(session){ history.replaceState(null,'',REDIRECT); return entrar(session.user); }
+    tela('axLogin');
+  })();
+
+  // ─── ABA ACESSOS (admin) ───
+  const fmtData = iso => { if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); };
+  let AD = { perfis:[], dados:[], sel:null };
+  async function chamar(acao, extra){
+    const { data, error } = await sb.functions.invoke('admin-usuarios', { body:Object.assign({acao, redirectTo:REDIRECT}, extra||{}) });
+    if(error){
+      let t = error.message||'';
+      try{ const j = await error.context.json(); if(j?.erro) t = j.erro; }catch(e){}
+      if(/not found|404|Failed to send/i.test(t)) t = 'A função de convites ainda não foi publicada no Supabase (passo 5 do guia).';
+      throw new Error(t);
+    }
+    if(data?.erro) throw new Error(data.erro);
+    return data;
+  }
+  window.admRender = async function(){
+    if(!PERFIL || PERFIL.role!=='admin') return;
+    const corpo = $('adBody');
+    const [p, d] = await Promise.all([
+      sb.from('profiles').select('*').order('created_at'),
+      sb.from('user_data').select('user_id,chave,valor,updated_at')
+    ]);
+    if(p.error || d.error){ corpo.innerHTML = `<tr><td colspan="6">${esc(traduz(p.error||d.error))}</td></tr>`; return; }
+    AD.perfis = p.data; AD.dados = d.data;
+    corpo.innerHTML = AD.perfis.map(u=>{
+      const meus = AD.dados.filter(r=>r.user_id===u.id);
+      const cotas = meus.filter(r=>r.chave==='clientesImoveis'||r.chave==='clientesVeiculos').reduce((a,r)=>a+(Array.isArray(r.valor)?r.valor.length:0),0);
+      const ult = meus.reduce((m,r)=>r.updated_at>m?r.updated_at:m,'');
+      const eu = u.id===USER.id;
+      return `<tr class="${AD.sel===u.id?'sel':''}">
+        <td><div class="ad-nome">${esc(u.nome||'—')}${eu?' (você)':''}</div><div class="ad-email">${esc(u.email)}</div></td>
+        <td>${u.role==='admin'?'Administrador':'Consultor'}</td>
+        <td>${u.ativo?'<span class="rd-pill win">Ativo</span>':'<span class="rd-pill near">Bloqueado</span>'}</td>
+        <td>${cotas}</td>
+        <td>${ult?fmtData(ult):'Nunca entrou'}</td>
+        <td><div class="ad-acts">
+          <button class="btn btn-outline btn-sm" data-ver="${u.id}">Ver carteira</button>
+          ${eu?'':`<button class="btn ${u.ativo?'btn-outline':'btn-primary'} btn-sm" data-bloq="${u.id}" data-ativo="${u.ativo?1:0}">${u.ativo?'Bloquear':'Desbloquear'}</button>`}
+        </div></td></tr>`;
+    }).join('') || '<tr><td colspan="6">Nenhum usuário ainda.</td></tr>';
+    if(AD.sel) verCarteira(AD.sel);
+  };
+  function verCarteira(id){
+    AD.sel = id;
+    const u = AD.perfis.find(x=>x.id===id); if(!u) return;
+    const pega = k => (AD.dados.find(r=>r.user_id===id && r.chave===k)||{}).valor || [];
+    const lista = pega('clientesImoveis').map(c=>({...c, seg:'Imóveis'})).concat(pega('clientesVeiculos').map(c=>({...c, seg:'Veículos'})));
+    lista.sort((a,b)=>String(a.nome).localeCompare(String(b.nome)));
+    $('adCarteira').innerHTML = `
+      <div class="rd-section-title" style="margin-top:1.75rem">📂 Carteira de ${esc(u.nome||u.email)} <span style="font-family:var(--fonte);font-size:13px;color:var(--texto-sec);font-weight:500">· ${lista.length} cota(s)</span></div>
+      ${lista.length ? `<div class="toolbar"><button class="btn btn-outline btn-sm" id="adBaixar">Baixar em Excel</button><button class="btn btn-outline btn-sm" id="adFechar">Fechar</button></div>
+      <div class="ad-table-wrap"><table class="ad-table"><thead><tr><th>Cliente</th><th>Telefone</th><th>Grupo / cota</th><th>Segmento</th><th>Valor</th><th>Matrícula</th></tr></thead><tbody>
+      ${lista.map(c=>`<tr><td class="ad-nome">${esc(c.nome)}</td><td>${esc(c.tel)}</td><td>${esc(c.grupo)}/${esc(c.cota)}</td><td>${c.seg}</td><td>${esc(c.valor||'—')}</td><td>${esc({propria:'Própria',gestores:'Gestores',atendimento:'Atendimento'}[c.matricula]||'—')}</td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="pd-empty">Este consultor ainda não cadastrou clientes.</div>`}`;
+    const fechar = $('adFechar'); if(fechar) fechar.onclick = ()=>{ AD.sel=null; $('adCarteira').innerHTML=''; admRender(); };
+    const bx = $('adBaixar'); if(bx) bx.onclick = ()=>{
+      try{
+        const ws = XLSX.utils.aoa_to_sheet([['Nome','Telefone','Grupo','Cota','Valor','Segmento','Matrícula']].concat(lista.map(c=>[c.nome,c.tel,c.grupo,c.cota,c.valor||'',c.seg,{propria:'Própria',gestores:'Gestores',atendimento:'Atendimento'}[c.matricula]||''])));
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+        XLSX.writeFile(wb, `carteira_${(u.nome||'consultor').replace(/\s+/g,'_')}.xlsx`);
+      }catch(e){ toast('Não consegui gerar o arquivo neste navegador.', true); }
+    };
+    document.querySelectorAll('#adBody tr').forEach(tr=>tr.classList.toggle('sel', !!tr.querySelector(`[data-ver="${id}"]`)));
+    $('adCarteira').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  $('adBody').addEventListener('click', async e=>{
+    const ver = e.target.closest('[data-ver]'); if(ver) return verCarteira(ver.dataset.ver);
+    const bq = e.target.closest('[data-bloq]'); if(!bq) return;
+    const bloquear = bq.dataset.ativo==='1';
+    if(bloquear && bq.dataset.arm!=='1'){ bq.dataset.arm='1'; bq.textContent='Confirmar bloqueio'; setTimeout(()=>{ if(bq.isConnected){ bq.dataset.arm=''; bq.textContent='Bloquear'; } },3500); return; }
+    bq.disabled = true;
+    try{ await chamar(bloquear?'bloquear':'desbloquear', {id:bq.dataset.bloq}); toast(bloquear?'Acesso bloqueado.':'Acesso liberado.'); admRender(); }
+    catch(err){ bq.disabled=false; toast(err.message, true); }
+  });
+  $('adConvidar').addEventListener('click', async ()=>{
+    const nome=$('adNome').value.trim(), email=$('adEmail').value.trim();
+    if(!email) return toast('Informe o e-mail do consultor.', true);
+    const b=$('adConvidar'); b.disabled=true; b.textContent='Enviando...';
+    try{ await chamar('convidar', {nome, email}); $('adNome').value=''; $('adEmail').value=''; toast(`Convite enviado para ${email}.`); admRender(); }
+    catch(err){ toast(err.message, true); }
+    b.disabled=false; b.textContent='Enviar convite';
+  });
+})();
+</script>
+
 </body>
 </html>

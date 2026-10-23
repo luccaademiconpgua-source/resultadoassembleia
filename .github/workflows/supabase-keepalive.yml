@@ -1,0 +1,20 @@
+name: Manter Supabase ativo
+
+# O plano grátis do Supabase pausa o projeto após 7 dias sem uso.
+# Este agendamento manda um "sinal de vida" a cada 3 dias.
+on:
+  schedule:
+    - cron: "17 12 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sinal de vida
+        run: |
+          URL=$(grep -oP 'url:\s*"\K[^"]+' supabase-config.js || true)
+          KEY=$(grep -oP 'key:\s*"\K[^"]+' supabase-config.js || true)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Supabase ainda não configurado."; exit 0; fi
+          curl -fsS -X POST "$URL/rest/v1/rpc/ping" -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}'
